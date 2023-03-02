@@ -30,7 +30,7 @@
 #include "string.h"
 #include "pcl/features/normal_3d.h"
 #include "lio_sam/cloud_info.h"
-#include "utility.h"
+#include "lio_sam/generics.h"
 
 
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     nh.getParam("/output_downsample_size", output_downsample_size);
     nh.getParam("/loss_function", loss_function);
 
-    directory = CreateFolder(directory, "dmapping_refinement");
+    //directory = CreateFolder(directory, "dmapping_refinement");
 
     lidar_param.setScanPeriod(scan_period);
     lidar_param.setVerticalAngle(vertical_angle);

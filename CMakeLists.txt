@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(dmapping_refinement)
 
-set(CMAKE_BUILD_TYPE "release")
-set(CMAKE_CXX_FLAGS "-std=c++14")
+set(CMAKE_BUILD_TYPE "debug")
+set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(catkin REQUIRED COMPONENTS
@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   eigen_conversions
+  tf_conversions
   lio_sam
   floam
 )
@@ -55,16 +56,16 @@ catkin_package(
 )
 
 
-#set (${PROJECT_NAME}_LIB_SRCS
-#  src/utils.cpp
-#  src/lidar.cpp
-#  src/dataHandler.cpp
-#)
-#add_library(${PROJECT_NAME} ${${PROJECT_NAME}_LIB_SRCS})
-#target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+set (${PROJECT_NAME}_LIB_SRCS
+  src/dmapping_refinement/utils.cpp
+  src/dmapping_refinement/fuser.cpp
+  src/dmapping_refinement/registration.cpp
+)
+add_library(${PROJECT_NAME} ${${PROJECT_NAME}_LIB_SRCS})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
 
 
 
 add_executable(refinement_node src/refinement_node.cpp)
-target_link_libraries(refinement_node ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
+target_link_libraries(refinement_node ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
 #add_dependencies(refinement_node ${catkin_EXPORTED_TARGETS})

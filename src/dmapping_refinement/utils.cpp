@@ -14,7 +14,7 @@ bool KeyFrameUpdate(const Eigen::Isometry3d& delta, const double keyframe_min_tr
   }
 }
 
-boost::shared_ptr<PoseGraph> KeyFrameFilter(boost::shared_ptr<PoseGraph> input, const double keyframe_min_transl, const double keyframe_min_rot){
+boost::shared_ptr<PoseGraph> KeyFrameFilter(boost::shared_ptr<PoseGraph> input, const double keyframe_min_transl, const double keyframe_min_rot, const long unsigned int max_size){
   boost::shared_ptr<PoseGraph> output = boost::make_shared<PoseGraph>();
   Eigen::Isometry3d Tprev = input->nodes.begin()->second.T;
   for(auto itr = std::next(input->nodes.begin()) ; itr != input->nodes.end() ; itr++){
@@ -24,6 +24,8 @@ boost::shared_ptr<PoseGraph> KeyFrameFilter(boost::shared_ptr<PoseGraph> input, 
       Tprev = Tnow;
       output->AddNode(itr->second,itr->first);
     }
+    if(max_size != -1 && output->nodes.size() >= max_size)
+        break;
   }
   output->constraints = input->constraints;
   cout << "keyframe_min_transl: " << keyframe_min_transl << endl;

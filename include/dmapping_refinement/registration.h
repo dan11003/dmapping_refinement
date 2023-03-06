@@ -6,7 +6,9 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 #include "odomEstimationClass.h"
-
+#include "eigen_conversions/eigen_kdl.h"
+#include "tf_conversions/tf_eigen.h"
+#include "dmapping_refinement/cost_function.h"
 namespace dmapping {
 
 typedef struct{
@@ -14,6 +16,7 @@ typedef struct{
     int src_idx;
     int target_scan;
     int target_idx;
+    double weight;
 }Correspondance;
 
 
@@ -25,44 +28,67 @@ public:
     int outer_iterations = 1;
     int inner_iterations = 1;
   };
+  struct Pose3d
+  {
+      Eigen::Vector3d p;
+      Eigen::Quaterniond q;
+  };
 
-  NScanRefinement(Parameters& par, std::map<int,Eigen::Isometry3d>& poses, std::map<int,NormalCloud::Ptr>& surf);
+  NScanRefinement(Parameters& par, std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf);
 
   void Solve();
 
 private:
 
-  std::map<int,int> AssociateScanPairsLogN();
+  std::vector<std::pair<int,int> > AssociateScanPairsLogN();
 
   std::vector<Correspondance> FindCorrespondences(const int scan_i, const int scan_j);
 
-  void addSurfCostFactor(const Correspondance& correspondance, ceres::Problem& problem);
+  void addSurfCostFactor(const Correspondance& c, ceres::Problem& problem);
 
   void TransformCommonFrame();
 
+  void Visualize();
 
+  int nr_residual = 0;
 
-
-  std::map<int,Eigen::Isometry3d> poses_;
+  /* InpUT */
+  Parameters par_;
+  std::map<int,Pose3d>& poses_;
   std::map<int,NormalCloud::Ptr> surf_;
+
   std::map<int,NormalCloud::Ptr> filtered_;
   std::map<int,Eigen::MatrixXf> filtered_eig_;
   std::map<int,NormalCloud::Ptr> transformed_;
+  std::map<int,std::vector<Eigen::Vector3d>> means_local_;
+  std::map<int,std::vector<Eigen::Vector3d>> normals_local_;
+
+  std::map<int,std::vector<Eigen::Vector3d>> means_transformed_;
+  std::map<int,std::vector<Eigen::Vector3d>> normals_transformed_;
+
   std::map<int,pcl::KdTreeFLANN<pcl::PointXYZINormal>::Ptr> kdtree_;
-  std::map<int, Eigen::Isometry3d> poses;
   std::map<int,std::vector<double> > optimization_parameters; // 7dof
 
-  Parameters par_;
+
   ceres::LossFunction *loss_function;
   ceres::Problem problem;
   ceres::Solver::Options options;
 };
 
-void GetParameters(std::map<int,Eigen::Isometry3d>& parameters, const boost::shared_ptr<PoseGraph> graph);
+void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boost::shared_ptr<PoseGraph> graph);
 
-void SetParameters(const std::map<int,Eigen::Isometry3d>& parameters, boost::shared_ptr<PoseGraph> graph);
+void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boost::shared_ptr<PoseGraph> graph);
+
+inline Eigen::Vector3d PntToEig(const pcl::PointXYZINormal& pnt){
+    return Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
+}
+inline Eigen::Vector3d NormalToEig(const pcl::PointXYZINormal& pnt){
+   return Eigen::Vector3d(pnt.normal_x, pnt.normal_y, pnt.normal_z);
+}
 
 
 }
+
+
 
 #endif // REGISTRATION_H

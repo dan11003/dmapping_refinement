@@ -4,6 +4,7 @@
 #include "odomEstimationClass.h"
 #include "dmapping_refinement/registration.h"
 
+
 namespace dmapping{
 
 class Fuser{
@@ -27,6 +28,8 @@ public:
       nh.param<double>("/max_dis", lidar_param.max_distance, 130);
       nh.param<double>("/min_dis", lidar_param.min_distance, 0);
       nh.param<int>("/scan_line", lidar_param.num_lines, 16);
+      nh.param<int>("/inner_iterations", reg_par.inner_iterations, 1);
+      nh.param<int>("/outer_iterations", reg_par.outer_iterations, 1);
       //nh.getParam("/map_resolution", map_resolution);
     }
   };
@@ -41,11 +44,18 @@ public:
   // Methods
   Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph);
 
+  bool ComputeSurfels();
+
   virtual void Run();
 
   virtual void Optimize();
 
   void Visualize();
+
+private:
+  void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boost::shared_ptr<PoseGraph> graph);
+
+  void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boost::shared_ptr<PoseGraph> graph);
 
 
 };

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(dmapping_refinement)
 
-set(CMAKE_BUILD_TYPE "debug")
+set(CMAKE_BUILD_TYPE "release")
 set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 

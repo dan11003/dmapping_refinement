@@ -5,7 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /PointCloud23
         - /TF1/Frames1
+        - /PointCloud24
       Splitter Ratio: 0.4853801131248474
     Tree Height: 701
   - Class: rviz/Selection
@@ -38,7 +40,7 @@ Visualization Manager:
       Color: 204; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
@@ -53,7 +55,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 0.5
       Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
@@ -66,7 +68,7 @@ Visualization Manager:
       Color: 237; 212; 0
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 153
@@ -83,6 +85,49 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
+      Value: false
+    - Alpha: 0.5
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /surf
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: false
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: false
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
       Value: true
     - Alpha: 0.5
       Autocompute Intensity Bounds: true
@@ -107,211 +152,10 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /surf
+      Topic: /reg_surf
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
-      Value: true
-    - Class: rviz/TF
-      Enabled: true
-      Frame Timeout: 15
-      Frames:
-        All Enabled: true
-        node_14:
-          Value: true
-        node_18:
-          Value: true
-        node_19:
-          Value: true
-        node_20:
-          Value: true
-        node_21:
-          Value: true
-        node_22:
-          Value: true
-        node_23:
-          Value: true
-        node_24:
-          Value: true
-        node_25:
-          Value: true
-        node_26:
-          Value: true
-        node_27:
-          Value: true
-        node_28:
-          Value: true
-        node_30:
-          Value: true
-        node_32:
-          Value: true
-        node_33:
-          Value: true
-        node_34:
-          Value: true
-        node_36:
-          Value: true
-        node_38:
-          Value: true
-        node_39:
-          Value: true
-        node_40:
-          Value: true
-        node_41:
-          Value: true
-        node_42:
-          Value: true
-        node_43:
-          Value: true
-        node_44:
-          Value: true
-        node_45:
-          Value: true
-        node_46:
-          Value: true
-        node_47:
-          Value: true
-        node_48:
-          Value: true
-        node_49:
-          Value: true
-        node_50:
-          Value: true
-        node_51:
-          Value: true
-        node_52:
-          Value: true
-        node_53:
-          Value: true
-        node_54:
-          Value: true
-        node_55:
-          Value: true
-        node_56:
-          Value: true
-        node_57:
-          Value: true
-        node_58:
-          Value: true
-        node_59:
-          Value: true
-        node_6:
-          Value: true
-        node_60:
-          Value: true
-        node_61:
-          Value: true
-        node_62:
-          Value: true
-        node_63:
-          Value: true
-        node_64:
-          Value: true
-        node_65:
-          Value: true
-        world:
-          Value: true
-      Marker Alpha: 1
-      Marker Scale: 1
-      Name: TF
-      Show Arrows: false
-      Show Axes: true
-      Show Names: true
-      Tree:
-        world:
-          node_14:
-            {}
-          node_18:
-            {}
-          node_19:
-            {}
-          node_20:
-            {}
-          node_21:
-            {}
-          node_22:
-            {}
-          node_23:
-            {}
-          node_24:
-            {}
-          node_25:
-            {}
-          node_26:
-            {}
-          node_27:
-            {}
-          node_28:
-            {}
-          node_30:
-            {}
-          node_32:
-            {}
-          node_33:
-            {}
-          node_34:
-            {}
-          node_36:
-            {}
-          node_38:
-            {}
-          node_39:
-            {}
-          node_40:
-            {}
-          node_41:
-            {}
-          node_42:
-            {}
-          node_43:
-            {}
-          node_44:
-            {}
-          node_45:
-            {}
-          node_46:
-            {}
-          node_47:
-            {}
-          node_48:
-            {}
-          node_49:
-            {}
-          node_50:
-            {}
-          node_51:
-            {}
-          node_52:
-            {}
-          node_53:
-            {}
-          node_54:
-            {}
-          node_55:
-            {}
-          node_56:
-            {}
-          node_57:
-            {}
-          node_58:
-            {}
-          node_59:
-            {}
-          node_6:
-            {}
-          node_60:
-            {}
-          node_61:
-            {}
-          node_62:
-            {}
-          node_63:
-            {}
-          node_64:
-            {}
-          node_65:
-            {}
-      Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
@@ -329,7 +173,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 3.644263744354248
+      Distance: 1.6388424634933472
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -337,17 +181,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 1.3681186437606812
-        Y: 5.908015727996826
-        Z: -7.152557373046875e-07
+        X: 0.05566862225532532
+        Y: -0.3996027112007141
+        Z: -3.0994415283203125e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.050398457795381546
+      Pitch: 1.0003981590270996
       Target Frame: <Fixed Frame>
-      Yaw: 2.7435920238494873
+      Yaw: 5.073598861694336
     Saved: ~
 Window Geometry:
   Displays:
@@ -363,5 +207,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 0
-  Y: 0
+  X: 72
+  Y: 27

@@ -89,6 +89,11 @@ void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boos
 inline Eigen::Vector3d PntToEig(const pcl::PointXYZINormal& pnt){
     return Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
 }
+inline pcl::PointXYZI EigToPnt(const Eigen::Vector3d& pnt, const double intensity){
+    pcl::PointXYZI p;
+    p.x = pnt(0); p.y = pnt(1); p.z = pnt(2); p.intensity = intensity;
+    return p;
+}
 inline Eigen::Vector3d NormalToEig(const pcl::PointXYZINormal& pnt){
    return Eigen::Vector3d(pnt.normal_x, pnt.normal_y, pnt.normal_z);
 }

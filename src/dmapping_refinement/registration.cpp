@@ -45,20 +45,27 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
 void NScanRefinement::Visualize(){
     static tf::TransformBroadcaster Tbr;
     std::vector<tf::StampedTransform> trans_vek;
-    NormalCloud::Ptr merged_surf(new NormalCloud());
-    const ros::Time t = ros::Time::now();
+    pcl::PointCloud<pcl::PointXYZI>::Ptr merged_surf(new pcl::PointCloud<pcl::PointXYZI>());
+    const ros::Time t_cloud = ros::Time::now();
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        NormalCloud tmp_surf;
-        pcl::transformPointCloud(*surf_[idx], tmp_surf, itr->second.p, itr->second.q);
-        *merged_surf += tmp_surf;
-        tf::Transform Tf;
-        const Eigen::Affine3d T = EigenCombine(itr->second.q, itr->second.p);
-        tf::transformEigenToTF(T, Tf);
-        trans_vek.push_back(tf::StampedTransform(Tf, t, "world", "reg_node_"+std::to_string(itr->first)));
+        Eigen::Vector3d t = itr->second.p;
+        Eigen::Quaterniond q = itr->second.q;
+        for(int i = 0 ; i < surf_[idx]->size() ; i++){
+            const double  time = stamps_[idx][i];
+            Eigen::Vector3d p_eig = PntToEig(surf_[idx]->points[i]);
+            const Eigen::Vector3d v_comp = velocities_[idx].p*time;
+            p_eig += v_comp; // compensate for motion
+            Eigen::Vector3d p_transformed = q*p_eig + t; // rigid transform
+            merged_surf->push_back(EigToPnt(p_transformed, surf_[idx]->points[i].intensity));
+            tf::Transform Tf;
+            const Eigen::Affine3d T = EigenCombine(itr->second.q, itr->second.p);
+            tf::transformEigenToTF(T, Tf);
+            trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_node_"+std::to_string(idx)));
+        }
     }
     Tbr.sendTransform(trans_vek);
-    PublishCloud("/reg2_surf", *merged_surf, "world", t);
+    PublishCloud("/reg2_surf", *merged_surf, "world", t_cloud);
     cout << "Publish size: " << merged_surf->size() << endl;
 }
 
@@ -155,10 +162,10 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
     const double distance = (dst_pnt_transf - src_pnt_transf).dot(dst_normal_transf);
 
     //cout <<"src: " << src_pnt.transpose() << ", dst_pnt: " << dst_pnt.transpose() <<", dst_pnt: " << dst_normal.transpose() << endl;
-    const double t_src = stamps_[src_scan][src_idx];
-    const double t_target = stamps_[target_scan][target_idx];
+    const double t_src = stamps_[c.src_scan][c.src_idx];
+    const double t_target = stamps_[c.target_scan][c.target_idx];
 
-    ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal,); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
+    ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
     ceres::LossFunction* scaled_loss = new ceres::ScaledLoss(loss_function, c.weight, ceres::TAKE_OWNERSHIP);
     if(nr_residual++% 1000 == 0){
         //std::cout << "Add res: " << distance << std::endl;
@@ -173,7 +180,9 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
             poses_[c.target_scan].q.coeffs().data(),
-            poses_[c.target_scan].p.data() );
+            poses_[c.target_scan].p.data(),
+            velocities_[c.src_scan].p.data(),
+            velocities_[c.target_scan].p.data());
 }
 
 
@@ -211,6 +220,10 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         //problemos.Evaluate(opt, &cost, &residuals, nullptr, nullptr);
         //cout << "cost: " << cost <<", res size: " << residuals.size() << endl;
         ceres::Solve(options, problem, &summary);
+        for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+            const int idx = itr->first;
+            cout <<velocities_[idx].p.transpose();
+        }
         cout << summary.FullReport() << endl;
         cout << "score: " << summary.final_cost / summary.num_residuals << endl;
         cout << "legit? - " << summary.IsSolutionUsable() << endl;

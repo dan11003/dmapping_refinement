@@ -2,13 +2,15 @@
 namespace dmapping{
 
 Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph) : par_(par){
-    if(par.use_keyframe)
-        graph_ = KeyFrameFilter(graph, par.keyframe_min_transl, par.keyframe_min_rot, 15);
-    else
-        graph_ = graph;
+    //if(par.use_keyframe)
+    graph_ = KeyFrameFilter(graph, par.keyframe_min_transl, par.keyframe_min_rot, par.tot_scans);
+    /*else
+        graph_ = graph;*/
 
-    for (auto& [index, surfel]: graph->surfels_)
+    for (auto& [index, surfel]: graph->surfels_){
         surf_[index] = surfel.GetPointCloud();
+        stamps_[index] = surfel.GetPointCloudTime();
+    }
 }
 
 
@@ -53,8 +55,9 @@ void Fuser::Run(){
 void Fuser::Optimize(){
     std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters, graph_);
-    NScanRefinement reg(par_.reg_par, parameters, surf_);
-    reg.Solve();
+    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_);
+    reg.Solve(parameters);
+    cout << "solved" << endl;
     SetParameters(parameters, graph_);
 }
 

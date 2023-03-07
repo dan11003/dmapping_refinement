@@ -8,8 +8,9 @@ Panels:
         - /PointCloud23
         - /TF1/Frames1
         - /PointCloud24
+        - /Grid1
       Splitter Ratio: 0.4853801131248474
-    Tree Height: 701
+    Tree Height: 1034
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Views
@@ -87,13 +88,13 @@ Visualization Manager:
       Use rainbow: true
       Value: false
     - Alpha: 0.5
-      Autocompute Intensity Bounds: true
+      Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
         Max Value: 10
         Min Value: -10
         Value: true
       Axis: Z
-      Channel Name: intensity
+      Channel Name: curvature
       Class: rviz/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
@@ -101,7 +102,9 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
+      Max Intensity: 49.58243179321289
       Min Color: 0; 0; 0
+      Min Intensity: 1.9230101599987393e-07
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -116,9 +119,131 @@ Visualization Manager:
       Value: false
     - Class: rviz/TF
       Enabled: true
-      Frame Timeout: 15
+      Frame Timeout: 1000
       Frames:
-        All Enabled: true
+        All Enabled: false
+        node_1:
+          Value: true
+        node_103:
+          Value: true
+        node_107:
+          Value: true
+        node_111:
+          Value: true
+        node_115:
+          Value: true
+        node_119:
+          Value: true
+        node_122:
+          Value: true
+        node_125:
+          Value: true
+        node_128:
+          Value: true
+        node_131:
+          Value: true
+        node_134:
+          Value: true
+        node_137:
+          Value: true
+        node_37:
+          Value: true
+        node_42:
+          Value: true
+        node_46:
+          Value: true
+        node_51:
+          Value: true
+        node_55:
+          Value: true
+        node_58:
+          Value: true
+        node_61:
+          Value: true
+        node_64:
+          Value: true
+        node_67:
+          Value: true
+        node_70:
+          Value: true
+        node_73:
+          Value: true
+        node_75:
+          Value: true
+        node_78:
+          Value: true
+        node_81:
+          Value: true
+        node_85:
+          Value: true
+        node_89:
+          Value: true
+        node_93:
+          Value: true
+        node_98:
+          Value: true
+        reg_node_1:
+          Value: true
+        reg_node_103:
+          Value: true
+        reg_node_107:
+          Value: true
+        reg_node_111:
+          Value: true
+        reg_node_115:
+          Value: true
+        reg_node_119:
+          Value: true
+        reg_node_122:
+          Value: true
+        reg_node_125:
+          Value: true
+        reg_node_128:
+          Value: true
+        reg_node_131:
+          Value: true
+        reg_node_134:
+          Value: true
+        reg_node_137:
+          Value: true
+        reg_node_37:
+          Value: true
+        reg_node_42:
+          Value: true
+        reg_node_46:
+          Value: true
+        reg_node_51:
+          Value: true
+        reg_node_55:
+          Value: true
+        reg_node_58:
+          Value: true
+        reg_node_61:
+          Value: true
+        reg_node_64:
+          Value: true
+        reg_node_67:
+          Value: true
+        reg_node_70:
+          Value: true
+        reg_node_73:
+          Value: true
+        reg_node_75:
+          Value: true
+        reg_node_78:
+          Value: true
+        reg_node_81:
+          Value: true
+        reg_node_85:
+          Value: true
+        reg_node_89:
+          Value: true
+        reg_node_93:
+          Value: true
+        reg_node_98:
+          Value: true
+        world:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
@@ -126,7 +251,127 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        world:
+          node_1:
+            {}
+          node_103:
+            {}
+          node_107:
+            {}
+          node_111:
+            {}
+          node_115:
+            {}
+          node_119:
+            {}
+          node_122:
+            {}
+          node_125:
+            {}
+          node_128:
+            {}
+          node_131:
+            {}
+          node_134:
+            {}
+          node_137:
+            {}
+          node_37:
+            {}
+          node_42:
+            {}
+          node_46:
+            {}
+          node_51:
+            {}
+          node_55:
+            {}
+          node_58:
+            {}
+          node_61:
+            {}
+          node_64:
+            {}
+          node_67:
+            {}
+          node_70:
+            {}
+          node_73:
+            {}
+          node_75:
+            {}
+          node_78:
+            {}
+          node_81:
+            {}
+          node_85:
+            {}
+          node_89:
+            {}
+          node_93:
+            {}
+          node_98:
+            {}
+          reg_node_1:
+            {}
+          reg_node_103:
+            {}
+          reg_node_107:
+            {}
+          reg_node_111:
+            {}
+          reg_node_115:
+            {}
+          reg_node_119:
+            {}
+          reg_node_122:
+            {}
+          reg_node_125:
+            {}
+          reg_node_128:
+            {}
+          reg_node_131:
+            {}
+          reg_node_134:
+            {}
+          reg_node_137:
+            {}
+          reg_node_37:
+            {}
+          reg_node_42:
+            {}
+          reg_node_46:
+            {}
+          reg_node_51:
+            {}
+          reg_node_55:
+            {}
+          reg_node_58:
+            {}
+          reg_node_61:
+            {}
+          reg_node_64:
+            {}
+          reg_node_67:
+            {}
+          reg_node_70:
+            {}
+          reg_node_73:
+            {}
+          reg_node_75:
+            {}
+          reg_node_78:
+            {}
+          reg_node_81:
+            {}
+          reg_node_85:
+            {}
+          reg_node_89:
+            {}
+          reg_node_93:
+            {}
+          reg_node_98:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -152,10 +397,28 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /reg_surf
+      Topic: /reg2_surf
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: false
+      Value: true
+    - Alpha: 0.5
+      Cell Size: 0.10000000149011612
+      Class: rviz/Grid
+      Color: 0; 0; 0
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 1000
+      Reference Frame: node_1
       Value: true
   Enabled: true
   Global Options:
@@ -173,7 +436,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 1.6388424634933472
+      Distance: 7.496217250823975
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -181,31 +444,31 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.05566862225532532
-        Y: -0.3996027112007141
-        Z: -3.0994415283203125e-06
-      Focal Shape Fixed Size: true
+        X: -1.2544854879379272
+        Y: 0.14906847476959229
+        Z: 1.5497207641601562e-06
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0003981590270996
+      Pitch: 1.260202169418335
       Target Frame: <Fixed Frame>
-      Yaw: 5.073598861694336
+      Yaw: 4.25985860824585
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1043
+  Height: 1376
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000203000003b9fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000000a0049006d006100670065000000002e000001340000000000000000fb000000100044006900730070006c006100790073010000003d000003b9000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000286000000a70000005c00ffffff0000000100000111000003b9fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d000003b9000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b000000040fc0100000002fb0000000800540069006d00650000000000000004b00000000000000000fb0000000800540069006d0065010000000000000450000000000000000000000460000003b900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000020300000506fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000000a0049006d006100670065000000002e000001340000000000000000fb000000100044006900730070006c006100790073010000003d00000506000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000286000000a70000005c00ffffff000000010000011100000506fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000506000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b000000040fc0100000002fb0000000800540069006d00650000000000000004b00000000000000000fb0000000800540069006d00650100000000000004500000000000000000000006980000050600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Tool Properties:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1920
+  Width: 2488
   X: 72
   Y: 27

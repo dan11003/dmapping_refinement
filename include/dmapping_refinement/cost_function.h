@@ -4,9 +4,9 @@
 
 struct PointToPlaneErrorGlobal{
 
-    const Eigen::Vector3d& p_dst;
-    const Eigen::Vector3d& p_src;
-    const Eigen::Vector3d& p_nor;
+    const Eigen::Vector3d p_dst;
+    const Eigen::Vector3d p_src;
+    const Eigen::Vector3d p_nor;
 
 
     PointToPlaneErrorGlobal(const Eigen::Vector3d& dst, const Eigen::Vector3d& src, const Eigen::Vector3d& nor) :

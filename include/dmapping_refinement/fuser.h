@@ -18,6 +18,7 @@ public:
     bool use_keyframe;
     lidar::Lidar lidar_param;
     NScanRefinement::Parameters reg_par;
+    int tot_scans;
 
     void GetParametersFromRos(ros::NodeHandle& nh){
       nh.getParam("/keyframe_min_transl", keyframe_min_transl);
@@ -28,8 +29,9 @@ public:
       nh.param<double>("/max_dis", lidar_param.max_distance, 130);
       nh.param<double>("/min_dis", lidar_param.min_distance, 0);
       nh.param<int>("/scan_line", lidar_param.num_lines, 16);
-      nh.param<int>("/inner_iterations", reg_par.inner_iterations, 1);
-      nh.param<int>("/outer_iterations", reg_par.outer_iterations, 1);
+      nh.param<int>("/inner_iterations", reg_par.inner_iterations, 3);
+      nh.param<int>("/outer_iterations", reg_par.outer_iterations, 2);
+      nh.param<int>("/tot_scans", tot_scans, 30);
       //nh.getParam("/map_resolution", map_resolution);
     }
   };
@@ -39,6 +41,7 @@ public:
   boost::shared_ptr<PoseGraph> graph_;
   std::map<int,SurfElCloud> surfels_;
   std::map<int,NormalCloud::Ptr> surf_;
+  std::map<int,std::vector<double>> stamps_;
 
 
   // Methods

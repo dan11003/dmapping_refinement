@@ -3,8 +3,8 @@
 
     <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Mon_2023.03.06_09:18:51/graph.pg" />
     <!--arg name="slam_param_file" default="$(find lio_sam)/config/params_structor_outdoor.yaml" /-->
-    <param name="keyframe_min_transl" type="double" value="0.05" />
-    <param name="keyframe_min_rot" type="double" value="0.035" />
+    <param name="keyframe_min_transl" type="double" value="0.2" /> <!-- 0.05 -->
+    <param name="keyframe_min_rot" type="double" value="5" /> <!-- 0.035 -->
     <param name="use_keyframe" type="bool" value="true" />
 
     <node pkg="dmapping_refinement" type="refinement_node" name="refinement_node" output="screen"/>

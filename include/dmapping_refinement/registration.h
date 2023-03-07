@@ -34,9 +34,15 @@ public:
       Eigen::Quaterniond q;
   };
 
-  NScanRefinement(Parameters& par, std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf);
+  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps);
 
-  void Solve();
+  void Solve(std::map<int,Pose3d>& solution);
+
+  ceres::Problem* problem;
+  ceres::Problem::Options problem_options;
+  ceres::Solver::Summary summary;
+
+
 
 private:
 
@@ -54,8 +60,10 @@ private:
 
   /* InpUT */
   Parameters par_;
-  std::map<int,Pose3d>& poses_;
+  std::map<int,Pose3d> poses_;
   std::map<int,NormalCloud::Ptr> surf_;
+  std::map<int,std::vector<double> > stamps_;
+  std::map<int,Pose3d> velocities_;
 
   std::map<int,NormalCloud::Ptr> filtered_;
   std::map<int,Eigen::MatrixXf> filtered_eig_;
@@ -71,7 +79,6 @@ private:
 
 
   ceres::LossFunction *loss_function;
-  ceres::Problem problem;
   ceres::Solver::Options options;
 };
 

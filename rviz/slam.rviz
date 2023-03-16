@@ -374,7 +374,7 @@ Visualization Manager:
             {}
       Update Interval: 0
       Value: true
-    - Alpha: 0.5
+    - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -394,7 +394,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 3
+      Size (Pixels): 2
       Size (m): 0.009999999776482582
       Style: Points
       Topic: /reg2_surf
@@ -418,7 +418,7 @@ Visualization Manager:
         Z: 0
       Plane: XY
       Plane Cell Count: 1000
-      Reference Frame: node_1
+      Reference Frame: world
       Value: true
   Enabled: true
   Global Options:
@@ -436,7 +436,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 7.496217250823975
+      Distance: 5.500192165374756
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -444,17 +444,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -1.2544854879379272
-        Y: 0.14906847476959229
-        Z: 1.5497207641601562e-06
+        X: -0.8005568981170654
+        Y: -0.3372352123260498
+        Z: -8.344650268554688e-07
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.260202169418335
+      Pitch: 0.6447973847389221
       Target Frame: <Fixed Frame>
-      Yaw: 4.25985860824585
+      Yaw: 3.8880298137664795
     Saved: ~
 Window Geometry:
   Displays:

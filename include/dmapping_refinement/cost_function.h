@@ -49,7 +49,7 @@ struct PointToPlaneErrorGlobalTime{
 
 
     PointToPlaneErrorGlobalTime(const Eigen::Vector3d& dst, const Eigen::Vector3d& src, const Eigen::Vector3d& nor, const double t_src, const double t_target) :
-    p_dst(dst), p_src(src), p_nor(nor), t_target_(t_target), t_src_(t_src)
+    p_dst(dst), p_src(src), p_nor(nor), t_src_(t_src), t_target_(t_target)
     {
 //        cout<<nor.dot(nor)<<endl;
     }
@@ -60,7 +60,7 @@ struct PointToPlaneErrorGlobalTime{
     }
 
     template <typename T>
-    bool operator()(const T* const src_camera_rot, const T* const src_camera_trans, const T* const dst_camera_rot, const T* const dst_camera_trans, const T* const velocity_src, const T* const velocity_dst, T* residuals) const {
+    bool operator()(const T* const src_camera_rot, const T* const src_camera_trans, const T* const dst_camera_rot, const T* const dst_camera_trans, const T* const velocity_src, const T* const velocity_dst,/* const T* const rad_vel_dst,*/ T* residuals) const {
 
         const Eigen::Quaternion<T> q_dst(dst_camera_rot);
         const Eigen::Matrix<T,3,1> t_dst(dst_camera_trans);
@@ -68,8 +68,10 @@ struct PointToPlaneErrorGlobalTime{
         const Eigen::Quaternion<T> q_src(src_camera_rot);
         const Eigen::Matrix<T,3,1> t_src(src_camera_trans);
 
-        const Eigen::Matrix<T,3,1> v_src(v_src);
-        const Eigen::Matrix<T,3,1> v_dst(v_dst);
+        const Eigen::Matrix<T,3,1> v_src(velocity_src);
+        const Eigen::Matrix<T,3,1> v_dst(velocity_dst);
+
+        //const Eigen::Quaternion<T> rad_w_dst(rad_vel_dst);
 
 
         const Eigen::Matrix<T,3,1> p_src_err(v_src*T(t_src_));

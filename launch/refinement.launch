@@ -6,6 +6,10 @@
     <param name="keyframe_min_transl" type="double" value="0.2" /> <!-- 0.05 -->
     <param name="keyframe_min_rot" type="double" value="5" /> <!-- 0.035 -->
     <param name="use_keyframe" type="bool" value="true" />
+    <param name="inner_iterations" type="double" value="5" />
+    <param name="outer_iterations" type="double" value="3" />
+    <param name="max_dist_association" type="double" value="1.0" />
+
 
     <node pkg="dmapping_refinement" type="refinement_node" name="refinement_node" output="screen"/>
     

@@ -9,6 +9,7 @@
 #include "eigen_conversions/eigen_kdl.h"
 #include "tf_conversions/tf_eigen.h"
 #include "dmapping_refinement/cost_function.h"
+#include "dmapping_refinement/utils.h"
 namespace dmapping {
 
 typedef struct{
@@ -27,6 +28,7 @@ public:
   {
     int outer_iterations = 1;
     int inner_iterations = 1;
+    double  max_dist_association = 0.5;
   };
   struct Pose3d
   {
@@ -86,17 +88,7 @@ void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boos
 
 void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boost::shared_ptr<PoseGraph> graph);
 
-inline Eigen::Vector3d PntToEig(const pcl::PointXYZINormal& pnt){
-    return Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
-}
-inline pcl::PointXYZI EigToPnt(const Eigen::Vector3d& pnt, const double intensity){
-    pcl::PointXYZI p;
-    p.x = pnt(0); p.y = pnt(1); p.z = pnt(2); p.intensity = intensity;
-    return p;
-}
-inline Eigen::Vector3d NormalToEig(const pcl::PointXYZINormal& pnt){
-   return Eigen::Vector3d(pnt.normal_x, pnt.normal_y, pnt.normal_z);
-}
+
 
 
 }

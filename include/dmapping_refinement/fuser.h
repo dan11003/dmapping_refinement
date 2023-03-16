@@ -31,6 +31,7 @@ public:
       nh.param<int>("/scan_line", lidar_param.num_lines, 16);
       nh.param<int>("/inner_iterations", reg_par.inner_iterations, 3);
       nh.param<int>("/outer_iterations", reg_par.outer_iterations, 2);
+      nh.param<double>("/max_dist_association", reg_par.max_dist_association, 1.0);
       nh.param<int>("/tot_scans", tot_scans, 30);
       //nh.getParam("/map_resolution", map_resolution);
     }

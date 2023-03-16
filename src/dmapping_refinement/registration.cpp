@@ -6,7 +6,8 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     loss_function = new ceres::CauchyLoss(0.1);
     //options.linear_solver_type = ceres::DENSE_QR;
     options.max_num_iterations = par_.inner_iterations;
-    options.minimizer_progress_to_stdout = false;
+    options.minimizer_progress_to_stdout = true;
+    options.num_threads = 6;
 
 
     //options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
@@ -42,6 +43,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     Visualize();
 }
 
+
 void NScanRefinement::Visualize(){
     static tf::TransformBroadcaster Tbr;
     std::vector<tf::StampedTransform> trans_vek;
@@ -49,20 +51,21 @@ void NScanRefinement::Visualize(){
     const ros::Time t_cloud = ros::Time::now();
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        Eigen::Vector3d t = itr->second.p;
-        Eigen::Quaterniond q = itr->second.q;
+        const Eigen::Vector3d t = itr->second.p;
+        const Eigen::Quaterniond q = itr->second.q;
         for(int i = 0 ; i < surf_[idx]->size() ; i++){
             const double  time = stamps_[idx][i];
             Eigen::Vector3d p_eig = PntToEig(surf_[idx]->points[i]);
             const Eigen::Vector3d v_comp = velocities_[idx].p*time;
+            //const Eigen::Vector3d q_comp = velocities_[idx].q*time;
             p_eig += v_comp; // compensate for motion
             Eigen::Vector3d p_transformed = q*p_eig + t; // rigid transform
             merged_surf->push_back(EigToPnt(p_transformed, surf_[idx]->points[i].intensity));
-            tf::Transform Tf;
-            const Eigen::Affine3d T = EigenCombine(itr->second.q, itr->second.p);
-            tf::transformEigenToTF(T, Tf);
-            trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_node_"+std::to_string(idx)));
         }
+        tf::Transform Tf;
+        const Eigen::Affine3d T = EigenCombine(q, t);
+        tf::transformEigenToTF(T, Tf);
+        trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_node_"+std::to_string(idx)));
     }
     Tbr.sendTransform(trans_vek);
     PublishCloud("/reg2_surf", *merged_surf, "world", t_cloud);
@@ -89,9 +92,8 @@ std::vector<Correspondance> NScanRefinement::FindCorrespondences(const int scan_
     const NormalCloud::Ptr cloud_i = transformed_[scan_i];
     const NormalCloud::Ptr cloud_j = transformed_[scan_j];
     pcl::KdTreeFLANN<pcl::PointXYZINormal>::Ptr kdtree = kdtree_[scan_j];
-    const double max_dist = 1.0;
-    const double max_planar_distance = max_dist/2;
-    const double max_dist_squared = max_dist*max_dist;
+    const double max_planar_distance = par_.max_dist_association/2;
+    const double max_dist_squared = par_.max_dist_association*par_.max_dist_association;
     const double sigma = 1.0 - std::cos(10*M_PI/180.0); // clear decay already at 10 degrees
     const double two_sigma_sqr = 2*sigma*sigma;
     int found = 0;
@@ -215,6 +217,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
         for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
             problem->SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
+            //problem->SetParameterBlockConstant(velocities_[itr->first].p.data());
         }
 
         //problemos.Evaluate(opt, &cost, &residuals, nullptr, nullptr);
@@ -222,7 +225,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         ceres::Solve(options, problem, &summary);
         for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
             const int idx = itr->first;
-            cout <<velocities_[idx].p.transpose();
+            cout <<velocities_[idx].p.transpose() << endl;;
         }
         cout << summary.FullReport() << endl;
         cout << "score: " << summary.final_cost / summary.num_residuals << endl;

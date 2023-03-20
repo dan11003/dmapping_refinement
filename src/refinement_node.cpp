@@ -105,7 +105,7 @@ public:
         }
     }
     void Optimize(){
-        dmapping::Fuser fuser(fuserpar, graph);
+        dmapping::Fuser fuser(fuserpar, graph, nh);
         fuser.Run();
     }
     boost::shared_ptr<PoseGraph> graph = nullptr;

@@ -5,10 +5,10 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /PointCloud23
-        - /TF1/Frames1
         - /PointCloud24
-        - /Grid1
+        - /PointCloud24/Autocompute Value Bounds1
+        - /PointCloud25
+        - /entropy2
       Splitter Ratio: 0.4853801131248474
     Tree Height: 1034
   - Class: rviz/Selection
@@ -122,125 +122,17 @@ Visualization Manager:
       Frame Timeout: 1000
       Frames:
         All Enabled: false
-        node_1:
+        node_2:
           Value: true
-        node_103:
+        node_27:
           Value: true
-        node_107:
+        node_34:
           Value: true
-        node_111:
+        reg_node_2:
           Value: true
-        node_115:
+        reg_node_27:
           Value: true
-        node_119:
-          Value: true
-        node_122:
-          Value: true
-        node_125:
-          Value: true
-        node_128:
-          Value: true
-        node_131:
-          Value: true
-        node_134:
-          Value: true
-        node_137:
-          Value: true
-        node_37:
-          Value: true
-        node_42:
-          Value: true
-        node_46:
-          Value: true
-        node_51:
-          Value: true
-        node_55:
-          Value: true
-        node_58:
-          Value: true
-        node_61:
-          Value: true
-        node_64:
-          Value: true
-        node_67:
-          Value: true
-        node_70:
-          Value: true
-        node_73:
-          Value: true
-        node_75:
-          Value: true
-        node_78:
-          Value: true
-        node_81:
-          Value: true
-        node_85:
-          Value: true
-        node_89:
-          Value: true
-        node_93:
-          Value: true
-        node_98:
-          Value: true
-        reg_node_1:
-          Value: true
-        reg_node_103:
-          Value: true
-        reg_node_107:
-          Value: true
-        reg_node_111:
-          Value: true
-        reg_node_115:
-          Value: true
-        reg_node_119:
-          Value: true
-        reg_node_122:
-          Value: true
-        reg_node_125:
-          Value: true
-        reg_node_128:
-          Value: true
-        reg_node_131:
-          Value: true
-        reg_node_134:
-          Value: true
-        reg_node_137:
-          Value: true
-        reg_node_37:
-          Value: true
-        reg_node_42:
-          Value: true
-        reg_node_46:
-          Value: true
-        reg_node_51:
-          Value: true
-        reg_node_55:
-          Value: true
-        reg_node_58:
-          Value: true
-        reg_node_61:
-          Value: true
-        reg_node_64:
-          Value: true
-        reg_node_67:
-          Value: true
-        reg_node_70:
-          Value: true
-        reg_node_73:
-          Value: true
-        reg_node_75:
-          Value: true
-        reg_node_78:
-          Value: true
-        reg_node_81:
-          Value: true
-        reg_node_85:
-          Value: true
-        reg_node_89:
-          Value: true
-        reg_node_93:
-          Value: true
-        reg_node_98:
+        reg_node_34:
           Value: true
         world:
           Value: true
@@ -252,161 +144,25 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          node_1:
+          node_2:
             {}
-          node_103:
+          node_27:
             {}
-          node_107:
+          node_34:
             {}
-          node_111:
+          reg_node_2:
             {}
-          node_115:
+          reg_node_27:
             {}
-          node_119:
-            {}
-          node_122:
-            {}
-          node_125:
-            {}
-          node_128:
-            {}
-          node_131:
-            {}
-          node_134:
-            {}
-          node_137:
-            {}
-          node_37:
-            {}
-          node_42:
-            {}
-          node_46:
-            {}
-          node_51:
-            {}
-          node_55:
-            {}
-          node_58:
-            {}
-          node_61:
-            {}
-          node_64:
-            {}
-          node_67:
-            {}
-          node_70:
-            {}
-          node_73:
-            {}
-          node_75:
-            {}
-          node_78:
-            {}
-          node_81:
-            {}
-          node_85:
-            {}
-          node_89:
-            {}
-          node_93:
-            {}
-          node_98:
-            {}
-          reg_node_1:
-            {}
-          reg_node_103:
-            {}
-          reg_node_107:
-            {}
-          reg_node_111:
-            {}
-          reg_node_115:
-            {}
-          reg_node_119:
-            {}
-          reg_node_122:
-            {}
-          reg_node_125:
-            {}
-          reg_node_128:
-            {}
-          reg_node_131:
-            {}
-          reg_node_134:
-            {}
-          reg_node_137:
-            {}
-          reg_node_37:
-            {}
-          reg_node_42:
-            {}
-          reg_node_46:
-            {}
-          reg_node_51:
-            {}
-          reg_node_55:
-            {}
-          reg_node_58:
-            {}
-          reg_node_61:
-            {}
-          reg_node_64:
-            {}
-          reg_node_67:
-            {}
-          reg_node_70:
-            {}
-          reg_node_73:
-            {}
-          reg_node_75:
-            {}
-          reg_node_78:
-            {}
-          reg_node_81:
-            {}
-          reg_node_85:
-            {}
-          reg_node_89:
-            {}
-          reg_node_93:
-            {}
-          reg_node_98:
+          reg_node_34:
             {}
       Update Interval: 0
-      Value: true
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: Intensity
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Min Color: 0; 0; 0
-      Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 2
-      Size (m): 0.009999999776482582
-      Style: Points
-      Topic: /reg2_surf
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: false
       Value: true
     - Alpha: 0.5
       Cell Size: 0.10000000149011612
       Class: rviz/Grid
       Color: 0; 0; 0
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -419,10 +175,206 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 1000
       Reference Frame: world
+      Value: false
+    - Alpha: 0.30000001192092896
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 2.128328561782837
+        Min Value: -2.830706834793091
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 0; 0; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /after_reg
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 0.30000001192092896
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 2.128328561782837
+        Min Value: -2.830706834793091
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 0; 0; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /before_reg
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 204; 0; 0
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: intensity
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /merged0
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 204; 0; 0
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: curvature
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /merged1
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 204; 0; 0
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: nSamples
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /merged2
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 204; 0; 0
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: entropy
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /merged3
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 204; 0; 0
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: entropy
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic: /merged4
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 114; 159; 207
+    Background Color: 211; 215; 207
     Default Light: true
     Fixed Frame: world
     Frame Rate: 30
@@ -436,7 +388,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 5.500192165374756
+      Distance: 5.137948036193848
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -444,17 +396,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.8005568981170654
-        Y: -0.3372352123260498
-        Z: -8.344650268554688e-07
-      Focal Shape Fixed Size: false
+        X: 1.6210582256317139
+        Y: 4.687656402587891
+        Z: 2.384185791015625e-06
+      Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6447973847389221
+      Pitch: 0.9497971534729004
       Target Frame: <Fixed Frame>
-      Yaw: 3.8880298137664795
+      Yaw: 4.28485631942749
     Saved: ~
 Window Geometry:
   Displays:

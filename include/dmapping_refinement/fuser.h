@@ -43,10 +43,11 @@ public:
   std::map<int,SurfElCloud> surfels_;
   std::map<int,NormalCloud::Ptr> surf_;
   std::map<int,std::vector<double>> stamps_;
+  ros::NodeHandle& nh_;
 
 
   // Methods
-  Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph);
+  Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandle& nh);
 
   bool ComputeSurfels();
 
@@ -57,11 +58,13 @@ public:
   void Visualize();
 
 private:
-  void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boost::shared_ptr<PoseGraph> graph);
+  void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters);
 
-  void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boost::shared_ptr<PoseGraph> graph);
+  void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters);
 
 
 };
+
+
 
 }

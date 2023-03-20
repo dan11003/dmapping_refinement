@@ -16,18 +16,26 @@ bool KeyFrameUpdate(const Eigen::Isometry3d& delta, const double keyframe_min_tr
 
 boost::shared_ptr<PoseGraph> KeyFrameFilter(boost::shared_ptr<PoseGraph> input, const double keyframe_min_transl, const double keyframe_min_rot, const int max_size){
     boost::shared_ptr<PoseGraph> output = boost::make_shared<PoseGraph>();
-    Eigen::Isometry3d Tprev = input->nodes.begin()->second.T;
-    output->AddNode(input->nodes.begin()->second,input->nodes.begin()->first);
+    Eigen::Isometry3d Tprev;
     //cout <<"keyframe_min_transl: "<< keyframe_min_transl << ", keyframe_min_rot:" << keyframe_min_rot << ", max_size: " << max_size << endl;
     for(auto itr = std::next(input->nodes.begin()) ; itr != input->nodes.end() ; itr++){
         const Eigen::Isometry3d Tnow = itr->second.T;
-        const Eigen::Isometry3d delta =  Tprev.inverse()*Tnow;
-        if(KeyFrameUpdate(delta, keyframe_min_transl, keyframe_min_rot)){
-            Tprev = Tnow;
-            output->AddNode(itr->second,itr->first);
+        const size_t idx = itr->first;
+
+        if(itr == std::next(input->nodes.begin())){ // if first iteration
+             Tprev = Tnow;
+             output->nodes[idx] = itr->second;
+             output->surfels_[idx] = input->surfels_[idx];
+             continue;
+        }else{ // if another iteration
+            const Eigen::Isometry3d delta =  Tprev.inverse()*Tnow;
+            if(KeyFrameUpdate(delta, keyframe_min_transl, keyframe_min_rot)){
+                Tprev = Tnow;
+                output->nodes[idx] = itr->second;
+                output->surfels_[idx] = input->surfels_[idx];
+            }
         }
         if(output->nodes.size() == max_size){
-            //cout << output->nodes.size() << endl;
             break;
         }
     }

@@ -10,6 +10,7 @@
 #include "tf_conversions/tf_eigen.h"
 #include "dmapping_refinement/cost_function.h"
 #include "dmapping_refinement/utils.h"
+
 namespace dmapping {
 
 typedef struct{
@@ -36,13 +37,14 @@ public:
       Eigen::Quaterniond q;
   };
 
-  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps);
+  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, ros::NodeHandle& nh);
 
   void Solve(std::map<int,Pose3d>& solution);
 
   ceres::Problem* problem;
   ceres::Problem::Options problem_options;
   ceres::Solver::Summary summary;
+  ros::NodeHandle& nh_;
 
 
 
@@ -56,7 +58,7 @@ private:
 
   void TransformCommonFrame();
 
-  void Visualize();
+  void Visualize(const std::string& topic);
 
   int nr_residual = 0;
 
@@ -93,6 +95,19 @@ void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boos
 
 }
 
+
+inline Eigen::Vector3d PntToEig(const pcl::PointXYZINormal& pnt){
+    return Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
+}
+inline pcl::PointXYZINormal EigToPnt(const Eigen::Vector3d& pnt, const Eigen::Vector3d& normal, const double intensity){
+    pcl::PointXYZINormal p;
+    p.x = pnt(0); p.y = pnt(1); p.z = pnt(2); p.intensity = intensity;
+    p.normal_x = normal(0); p.normal_y = normal(1); p.normal_z = normal(2);
+    return p;
+}
+inline Eigen::Vector3d NormalToEig(const pcl::PointXYZINormal& pnt){
+   return Eigen::Vector3d(pnt.normal_x, pnt.normal_y, pnt.normal_z);
+}
 
 
 #endif // REGISTRATION_H

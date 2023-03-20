@@ -38,6 +38,43 @@ struct PointToPlaneErrorGlobal{
     }
 };
 
+struct PointToPlaneErrorGlobalP2P{
+
+    const Eigen::Vector3d p_dst;
+    const Eigen::Vector3d p_src;
+    const Eigen::Vector3d p_nor;
+
+
+    PointToPlaneErrorGlobalP2P(const Eigen::Vector3d& dst, const Eigen::Vector3d& src, const Eigen::Vector3d& nor) :
+    p_dst(dst), p_src(src), p_nor(nor)
+    {
+//        cout<<nor.dot(nor)<<endl;
+    }
+
+    // Factory to hide the construction of the CostFunction object from the client code.
+    static ceres::CostFunction* Create(const Eigen::Vector3d& dst, const Eigen::Vector3d& src, const Eigen::Vector3d& nor) {
+        return (new ceres::AutoDiffCostFunction<PointToPlaneErrorGlobalP2P, 3, 4, 3, 4, 3>(new PointToPlaneErrorGlobalP2P(dst, src, nor)));
+    }
+
+    template <typename T>
+    bool operator()(const T* const src_camera_rot, const T* const src_camera_trans, const T* const dst_camera_rot, const T* const dst_camera_trans, T* residuals) const {
+
+        const Eigen::Quaternion<T> q_dst(dst_camera_rot);
+        const Eigen::Matrix<T,3,1> t_dst(dst_camera_trans);
+
+        const Eigen::Quaternion<T> q_src(src_camera_rot);
+        const Eigen::Matrix<T,3,1> t_src(src_camera_trans);
+
+        const Eigen::Matrix<T,3,1> p_src_transf = q_src*p_src.cast<T>() + t_src;
+        const Eigen::Matrix<T,3,1> p_dst_transf = q_dst*p_dst.cast<T>() + t_dst;
+        residuals[0] = p_src_transf(0) - p_dst_transf(0);
+        residuals[1] = p_src_transf(1) - p_dst_transf(1);
+        residuals[2] = p_src_transf(2) - p_dst_transf(2);
+
+        return true;
+    }
+};
+
 
 struct PointToPlaneErrorGlobalTime{
 

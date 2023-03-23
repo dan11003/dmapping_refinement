@@ -10,7 +10,7 @@
 #include "tf_conversions/tf_eigen.h"
 #include "dmapping_refinement/cost_function.h"
 #include "dmapping_refinement/utils.h"
-
+#include <pcl/filters/normal_refinement.h>
 namespace dmapping {
 
 typedef struct{
@@ -56,9 +56,13 @@ private:
 
   void addSurfCostFactor(const Correspondance& c, ceres::Problem& problem);
 
-  void TransformCommonFrame();
+  void TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree);
 
   void Visualize(const std::string& topic);
+
+  void VisualizeCorrespondance(std::vector<Correspondance>& corr);
+
+  void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name);
 
   int nr_residual = 0;
 
@@ -84,6 +88,8 @@ private:
 
   ceres::LossFunction *loss_function;
   ceres::Solver::Options options;
+
+  ros::Publisher vis_pub, normal_pub;
 };
 
 void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boost::shared_ptr<PoseGraph> graph);

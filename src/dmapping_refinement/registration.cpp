@@ -3,13 +3,12 @@
 namespace dmapping {
 
 NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, ros::NodeHandle& nh) : par_(par), poses_(poses), surf_(surf), stamps_(stamps), nh_(nh){
-    loss_function = new ceres::CauchyLoss(0.1); // HuberLoss(0.1);
-    //options.linear_solver_type = ceres::DENSE_QR;
+    loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
     options.max_num_iterations = par_.inner_iterations;
     options.minimizer_progress_to_stdout = true;
     options.num_threads = 6;
-
-
+    vis_pub = nh_.advertise<visualization_msgs::Marker>("/correspondances",100);
+    normal_pub = nh_.advertise<visualization_msgs::Marker>("/normals",100);
     //options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 
     // Initialize
@@ -23,8 +22,9 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
         const int idx = itr->first;
         filtered_[idx] = NormalCloud().makeShared();
         pcl::VoxelGrid<pcl::PointXYZINormal> sor;
+        sor.setMinimumPointsNumberPerVoxel(2);
         sor.setInputCloud(surf_[idx]);
-        sor.setLeafSize (0.05f, 0.05f, 0.05f);
+        sor.setLeafSize (0.1f, 0.1f, 0.1f);
         sor.filter (*filtered_[idx]);
         cout <<"Downsampling rate: " << (double)filtered_[idx]->size() / surf_[idx]->size()  << endl;
     }
@@ -48,14 +48,19 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
 void NScanRefinement::Visualize(const std::string& topic){
     static tf::TransformBroadcaster Tbr;
     std::vector<tf::StampedTransform> trans_vek;
-    NormalCloud::Ptr merged_surf(new NormalCloud());
+    NormalCloud::Ptr surf_filtered(new NormalCloud());
+    NormalCloud::Ptr surf_unfiltered(new NormalCloud());
     const ros::Time t_cloud = ros::Time::now();
+    //TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree){
 
-    TransformCommonFrame();
+    TransformCommonFrame(filtered_, transformed_, false);
+    std::map<int,NormalCloud::Ptr> unfiltered_;
+    TransformCommonFrame(surf_, unfiltered_, false);
     int nr = 0;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        *merged_surf += *transformed_[idx];
+        *surf_filtered += *transformed_[idx];
+        *surf_unfiltered += *unfiltered_[idx];
         PublishCloud("registerd_"+std::to_string(nr++), *transformed_[idx], "world", t_cloud, nh_);
         tf::Transform Tf;
         const Eigen::Affine3d T = EigenCombine(itr->second.q, itr->second.p);
@@ -63,8 +68,10 @@ void NScanRefinement::Visualize(const std::string& topic){
         trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_node_"+std::to_string(idx)));
     }
     Tbr.sendTransform(trans_vek);
-    PublishCloud(topic, *merged_surf, "world", t_cloud, nh_);
-    cout << "Publish size: " << merged_surf->size() << " to " << topic << endl;
+    PublishCloud(topic, *surf_filtered, "world", t_cloud, nh_);
+    PublishCloud(topic+"unfiltered", *surf_unfiltered, "world", t_cloud, nh_);
+    cout << "Publish unfiltered: " << surf_unfiltered->size() << " to " << topic << endl;
+    cout << "Publish filtered: " << surf_filtered->size() << " to " << topic << endl;
 }
 
 
@@ -87,10 +94,11 @@ std::vector<Correspondance> NScanRefinement::FindCorrespondences(const int scan_
     const NormalCloud::Ptr cloud_i = transformed_[scan_i];
     const NormalCloud::Ptr cloud_j = transformed_[scan_j];
     pcl::KdTreeFLANN<pcl::PointXYZINormal>::Ptr kdtree = kdtree_[scan_j];
-    const double max_planar_distance = par_.max_dist_association/2;
+    const double max_planar_distance = par_.max_dist_association/2.0;
     const double max_dist_squared = par_.max_dist_association*par_.max_dist_association;
     const double sigma = 1.0 - std::cos(10*M_PI/180.0); // clear decay already at 10 degrees
     const double two_sigma_sqr = 2*sigma*sigma;
+
     int found = 0;
     int accept = 0;
     for(size_t i = 0 ; i < cloud_i->points.size() ; i++){
@@ -98,10 +106,11 @@ std::vector<Correspondance> NScanRefinement::FindCorrespondences(const int scan_
         std::vector<float> pointSearchSqDis;
         const pcl::PointXYZINormal& p_i = cloud_i->points[i];
 
-        if(kdtree->nearestKSearch(p_i, max_dist_squared, pointSearchInd, pointSearchSqDis)){
+        if(kdtree->nearestKSearch(p_i, 1, pointSearchInd, pointSearchSqDis) > 0){
             if(pointSearchSqDis.front() > max_dist_squared){ // control distance
                 continue;
             }
+
             found++;
             const int j = pointSearchInd.front();
             const pcl::PointXYZINormal& p_j = cloud_j->points[j];
@@ -129,18 +138,18 @@ std::vector<Correspondance> NScanRefinement::FindCorrespondences(const int scan_
     //cout <<"tot: " << cloud_i->size() << ", found: " << found << ", accept: " << accept << endl;
     return correspondances;
 }
-void NScanRefinement::TransformCommonFrame(){
+void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree){
+    const auto& input_set(input);
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        auto h_transformed = NormalCloud().makeShared();
-        auto& h_vel = velocities_[idx];
-        auto& h_time = stamps_[idx];
-        auto& h_points = filtered_[idx];
-        Eigen::Vector3d& t = poses_[idx].p;
-        Eigen::Quaterniond& q = poses_[idx].q;
+        const auto h_transformed = NormalCloud().makeShared();
+        const auto& h_vel = velocities_.at(idx);
+        const auto& h_time = stamps_.at(idx);
+        const auto& h_points = input_set.at(idx);
+        const Eigen::Vector3d& t = poses_.at(idx).p;
+        const Eigen::Quaterniond& q = poses_.at(idx).q;
 
         for(size_t i = 0 ; i < h_points->size() ; i++){
-            //pcl::transformPointCloudWithNormals(*filtered_[idx], *transformed_[idx], EigenCombine(poses_[idx].q,poses_[idx].p).matrix());
             const double time = h_time[i];
             const auto pnt = (h_points->points[i]);
             const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
@@ -152,9 +161,11 @@ void NScanRefinement::TransformCommonFrame(){
             //if(i%100==0)
             //    cout << p_transformed.transpose() << ", " << normal_transformed.transpose() << endl;
         }
-        transformed_[idx] = h_transformed;
-        kdtree_[idx] = pcl::KdTreeFLANN<pcl::PointXYZINormal>().makeShared();
-        kdtree_[idx]->setInputCloud(transformed_[idx]);
+        output[idx] = h_transformed;
+        if(compute_kdtree){
+            kdtree_[idx] = pcl::KdTreeFLANN<pcl::PointXYZINormal>().makeShared();
+            kdtree_[idx]->setInputCloud(transformed_[idx]);
+        }
     }
 }
 
@@ -186,9 +197,9 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
     const double t_src = stamps_[c.src_scan][c.src_idx];
     const double t_target = stamps_[c.target_scan][c.target_idx];
 
-    //ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
+    ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
     //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
-    ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
+    //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
     ceres::LossFunction* scaled_loss = new ceres::ScaledLoss(loss_function, c.weight, ceres::TAKE_OWNERSHIP);
     if(nr_residual++% 1000 == 0){
         //std::cout << "Add res: " << distance << std::endl;
@@ -198,24 +209,79 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
         //cout << src_pnt.transpose() << ", " << dst_pnt.transpose() << ", " << dst_normal.transpose() << endl;
         //cout <<"block: "<< poses_[c.src_scan].q.coeffs().data()<<", " << poses_[c.src_scan].p.data() << ", " <<poses_[c.target_scan].q.coeffs().data() <<", " << poses_[c.target_scan].p.data() << endl;
     }
-    /*prob.AddResidualBlock(cost_function,
+    prob.AddResidualBlock(cost_function,
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
             poses_[c.target_scan].q.coeffs().data(),
             poses_[c.target_scan].p.data(),
             velocities_[c.src_scan].p.data(),
-            velocities_[c.target_scan].p.data());*/
-    prob.AddResidualBlock(cost_function,
+            velocities_[c.target_scan].p.data());
+    /*prob.AddResidualBlock(cost_function,
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
             poses_[c.target_scan].q.coeffs().data(),
             poses_[c.target_scan].p.data());
+*/
+}
+void NScanRefinement::VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name){
+    visualization_msgs::Marker line_strip;
+    line_strip.header.frame_id = "world";
+    line_strip.ns = name;
+    line_strip.action = visualization_msgs::Marker::ADD;
+    line_strip.pose.orientation.w = 1.0;
 
+    line_strip.id = 1;
+    line_strip.type = visualization_msgs::Marker::LINE_LIST;
+
+    line_strip.scale.x = 0.005;
+    line_strip.color.r = 1.0;
+    line_strip.color.a = 1.0;
+    for (const auto& [index, cloud] : input) {
+        for(int i = 0 ; i < cloud->size() ; i++){
+            const auto& pnt_1 = cloud->points[i];
+            geometry_msgs::Point p1;
+            p1.x = pnt_1.x; p1.y = pnt_1.y; p1.z = pnt_1.z;
+            geometry_msgs::Point p2;
+            p2.x = p1.x+pnt_1.normal_x*0.1;
+            p2.y = p1.y+pnt_1.normal_y*0.1;
+            p2.z = p1.z+pnt_1.normal_z*0.1;
+            line_strip.points.push_back(p1);
+            line_strip.points.push_back(p2);
+        }
+    }
+    line_strip.header.stamp = ros::Time::now();
+    normal_pub.publish(line_strip);
 }
 
+void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr){
+    visualization_msgs::Marker line_strip;
+    line_strip.header.frame_id = "world";
+    line_strip.ns = "points_and_lines";
+    line_strip.action = visualization_msgs::Marker::ADD;
+    line_strip.pose.orientation.w = 1.0;
 
+    line_strip.id = 1;
+    line_strip.type = visualization_msgs::Marker::LINE_LIST;
+
+    line_strip.scale.x = 0.005;
+    line_strip.color.b = 1.0;
+    line_strip.color.a = 0.3;
+
+    for(int i = 0 ; i < corr.size() ; i++){
+        const auto pnt_1 = transformed_[corr[i].src_scan]->points[corr[i].src_idx];
+        const auto pnt_2 = transformed_[corr[i].target_scan]->points[corr[i].target_idx];
+        geometry_msgs::Point p1;
+        p1.x = pnt_1.x; p1.y = pnt_1.y; p1.z = pnt_1.z;
+        geometry_msgs::Point p2;
+        p2.x = pnt_2.x; p2.y = pnt_2.y; p2.z = pnt_2.z;
+        line_strip.points.push_back(p1);
+        line_strip.points.push_back(p2);
+    }
+    line_strip.header.stamp = ros::Time::now();
+    vis_pub.publish(line_strip);
+}
 
 void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
     Visualize("/after_reg");
@@ -224,7 +290,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
 
     for (int i = 0; i < par_.outer_iterations ; i++) {
         problem = new ceres::Problem();
-        TransformCommonFrame();
+        TransformCommonFrame(filtered_, transformed_, true);
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         cout <<"scan pairs: " << scan_pairs.size() << endl;
         std::vector<Correspondance> correspondances;
@@ -236,40 +302,48 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
             //cout << "FindCorrespondences: " << scan_i << "," << scan_j <<", size: " << tmp_corr.size() << endl;
             correspondances.insert(correspondances.end(), tmp_corr.begin(), tmp_corr.end());
         }
+        VisualizeCorrespondance(correspondances);
+        std::map<int,NormalCloud::Ptr> raw_transformed;
+        TransformCommonFrame(surf_, raw_transformed, true);
+        VisualizePointCloudNormal(raw_transformed, "normals");
+
+
         cout <<"Total: " << correspondances.size() << endl;
         cout << "Add residuals" << endl;
         for(auto && c : correspondances){
             addSurfCostFactor(c, *problem);
         }
-        auto pose_first_iter = poses_.begin();
-        problem->SetParameterBlockConstant(pose_first_iter->second.p.data());
-        problem->SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
+        if(!correspondances.empty()){
+            auto pose_first_iter = poses_.begin();
+            problem->SetParameterBlockConstant(pose_first_iter->second.p.data());
+            problem->SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
 
-        ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
-        for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
-            problem->SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
-            //problem->SetParameterBlockConstant(velocities_[itr->first].p.data());
-        }
+            ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
+            for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+                problem->SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
+                //problem->SetParameterBlockConstant(velocities_[itr->first].p.data());
+            }
 
-        //problemos.Evaluate(opt, &cost, &residuals, nullptr, nullptr);
-        //cout << "cost: " << cost <<", res size: " << residuals.size() << endl;
-        cout << "before solve: " << endl;
-        for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
-            const int idx = itr->first;
-            cout <<"P: " << poses_[idx].p.transpose() << " - q: " <<  poses_[idx].q.coeffs().transpose() << " - v: " << velocities_[idx].p.transpose() << endl;;
-        }
-        ceres::Solve(options, problem, &summary);
+            //problemos.Evaluate(opt, &cost, &residuals, nullptr, nullptr);
+            //cout << "cost: " << cost <<", res size: " << residuals.size() << endl;
+            cout << "before solve: " << endl;
+            for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+                const int idx = itr->first;
+                cout <<"P: " << poses_[idx].p.transpose() << " - q: " <<  poses_[idx].q.coeffs().transpose() << " - v: " << velocities_[idx].p.transpose() << endl;;
+            }
+            ceres::Solve(options, problem, &summary);
 
-        cout << summary.FullReport() << endl;
-        cout << "score: " << summary.final_cost / summary.num_residuals << endl;
-        cout << "legit? - " << summary.IsSolutionUsable() << endl;
+            cout << summary.FullReport() << endl;
+            cout << "score: " << summary.final_cost / summary.num_residuals << endl;
+            cout << "legit? - " << summary.IsSolutionUsable() << endl;
 
-        cout << "after solve: " << endl;
-        for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
-            const int idx = itr->first;
-            //cout << poses_[idx].p.transpose() << " - " <<  poses_[idx].q.coeffs().transpose() << endl;  // velocities_[idx].p.transpose() << endl;;
-            const std::string filename =  "/home/daniel/Documents/cloud/cloud_" + std::to_string(itr->first) + ".pcd";
-            pcl::io::savePCDFileBinary(filename, *transformed_[itr->first]);
+            cout << "after solve: " << endl;
+            for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+                const int idx = itr->first;
+                //cout << poses_[idx].p.transpose() << " - " <<  poses_[idx].q.coeffs().transpose() << endl;  // velocities_[idx].p.transpose() << endl;;
+                const std::string filename =  "/home/daniel/Documents/cloud/cloud_" + std::to_string(itr->first) + ".pcd";
+                pcl::io::savePCDFileBinary(filename, *transformed_[itr->first]);
+            }
         }
 
         Visualize("/after_reg");

@@ -8,6 +8,21 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
         surf_[index] = surfel.GetPointCloud();
         stamps_[index] = surfel.GetPointCloudTime();
     }
+    for (auto& [index, surf_cloud]: surf_){
+        NormalCloud::Ptr filtered_normals(new NormalCloud());
+        std::vector<pcl::Indices > k_indices;
+        std::vector<std::vector<float> > k_sqr_distances;
+
+        // Run search
+        pcl::search::KdTree<pcl::PointXYZINormal> search;
+        search.setInputCloud (surf_cloud);
+        search.nearestKSearch (*surf_cloud, pcl::Indices(), 3, k_indices, k_sqr_distances);
+        cout << "k_ind: " << k_indices.size() << endl;
+        pcl::NormalRefinement<pcl::PointXYZINormal> refinement(k_indices, k_sqr_distances);
+        refinement.setInputCloud(surf_cloud);
+        refinement.filter(*filtered_normals);
+        surf_[index] = filtered_normals;
+    }
 }
 
 

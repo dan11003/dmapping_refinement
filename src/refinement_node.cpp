@@ -29,7 +29,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "lio_sam/generics.h"
-#include "dmapping_refinement/utils.h"
+#include "dmapping_refinement/d_utils.h"
 #include "dmapping_refinement/fuser.h"
 #include <omp.h>
 
@@ -72,8 +72,7 @@ public:
                 cout <<"extract: "<< idx << endl; //", :" <<<<itr->second.segmented_scans.front()->size()<<endl;
                 cout <<  fuserpar.lidar_param.num_lines << ", " << fuserpar.lidar_param.scan_period << endl;
                 cout << itr->second.segmented_scans.front()->size() << endl;
-                SurfelExtraction extr(itr->second.segmented_scans.front(), fuserpar.lidar_param.num_lines, fuserpar.lidar_param.scan_period);
-                cout <<"extract: "<< idx << endl; //", :" <<<<itr->second.segmented_scans.front()->size()<<endl;
+                dmapping::SurfelExtraction extr(itr->second.segmented_scans.front(), fuserpar.lidar_param.num_lines, fuserpar.lidar_param.scan_period);
                 SurfElCloud surfelcloud;
                 extr.Extract(surfelcloud);
                 //#pragma omp critical

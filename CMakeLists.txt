@@ -57,7 +57,7 @@ catkin_package(
 
 
 set (${PROJECT_NAME}_LIB_SRCS
-  src/dmapping_refinement/utils.cpp
+  src/dmapping_refinement/d_utils.cpp
   src/dmapping_refinement/fuser.cpp
   src/dmapping_refinement/registration.cpp
 )

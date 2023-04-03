@@ -2,7 +2,7 @@
 
 namespace dmapping {
 
-NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, ros::NodeHandle& nh) : par_(par), poses_(poses), surf_(surf), stamps_(stamps), nh_(nh){
+NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh) : par_(par), poses_(poses), surf_(surf), stamps_(stamps), imu_(imu), nh_(nh){
     loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
     options.max_num_iterations = par_.inner_iterations;
     options.minimizer_progress_to_stdout = true;
@@ -10,6 +10,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     vis_pub = nh_.advertise<visualization_msgs::Marker>("/correspondances",100);
     normal_pub = nh_.advertise<visualization_msgs::Marker>("/normals",100);
     //options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+
 
     // Initialize
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
@@ -50,6 +51,7 @@ void NScanRefinement::Visualize(const std::string& topic){
     std::vector<tf::StampedTransform> trans_vek;
     NormalCloud::Ptr surf_filtered(new NormalCloud());
     NormalCloud::Ptr surf_unfiltered(new NormalCloud());
+    NormalCloud::Ptr surf_downsampled(new NormalCloud());
     const ros::Time t_cloud = ros::Time::now();
     //TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree){
 
@@ -63,13 +65,27 @@ void NScanRefinement::Visualize(const std::string& topic){
         *surf_unfiltered += *unfiltered_[idx];
         PublishCloud("registerd_"+std::to_string(nr++), *transformed_[idx], "world", t_cloud, nh_);
         tf::Transform Tf;
-        const Eigen::Affine3d T = EigenCombine(itr->second.q, itr->second.p);
-        tf::transformEigenToTF(T, Tf);
+        const Eigen::Affine3d Tnode = EigenCombine(itr->second.q, itr->second.p);
+        tf::transformEigenToTF(Tnode, Tf);
         trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_node_"+std::to_string(idx)));
+
+        const Eigen::Affine3d Timu = EigenCombine(imu_[idx], itr->second.p);
+        tf::transformEigenToTF(Timu, Tf);
+        trans_vek.push_back(tf::StampedTransform(Tf, t_cloud, "world", "reg_imu_"+std::to_string(idx)));
     }
     Tbr.sendTransform(trans_vek);
     PublishCloud(topic, *surf_filtered, "world", t_cloud, nh_);
     PublishCloud(topic+"unfiltered", *surf_unfiltered, "world", t_cloud, nh_);
+
+    PublishCloud(topic+"unfiltered", *surf_unfiltered, "world", t_cloud, nh_);
+    pcl::VoxelGrid<pcl::PointXYZINormal> sor;
+    sor.setMinimumPointsNumberPerVoxel(2);
+    sor.setInputCloud(surf_unfiltered);
+    sor.setLeafSize (0.05f, 0.05f, 0.05f);
+    sor.filter (*surf_downsampled);
+    PublishCloud(topic+"unfiltered_downsampled", *surf_downsampled, "world", t_cloud, nh_);
+
+
     cout << "Publish unfiltered: " << surf_unfiltered->size() << " to " << topic << endl;
     cout << "Publish filtered: " << surf_filtered->size() << " to " << topic << endl;
 }
@@ -80,9 +96,9 @@ std::vector<std::pair<int,int> > NScanRefinement::AssociateScanPairsLogN(){
     for(auto itr_from = poses_.begin() ; itr_from != std::prev(poses_.end()) ; itr_from++){
         for(auto itr_to = std::next(itr_from) ; itr_to != poses_.end() ; itr_to++){
             //log n instead of n
-            if(std::distance(itr_from,itr_to) % 2 ==0 || std::distance(itr_from,itr_to) == 1){ // 1 2 4 8
+            //if(std::distance(itr_from,itr_to) % 2 ==0 || std::distance(itr_from,itr_to) == 1){ // 1 2 4 8
                 scan_pairs.push_back(std::make_pair(itr_from->first, itr_to->first));
-            }
+            //}
         }
     }
     return scan_pairs;
@@ -283,6 +299,15 @@ void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr)
     vis_pub.publish(line_strip);
 }
 
+void NScanRefinement::AddRotationTerm(int idx){
+    const auto& imu_q(imu_[idx]);
+    Eigen::Quaterniond& pose_q(poses_[idx].q);
+    //Eigen::Vector3d variance(1.0/(0.001), 1.0/0.001, 1.0/10000.0);
+    Eigen::Vector3d variance(0.00001, 0.00001, 0.000001);
+    Eigen::Matrix3d sqrt_inf = variance.asDiagonal();
+    ceres::CostFunction* cost_function = dmapping::RotErrorTerm::Create(imu_q, sqrt_inf);
+    problem->AddResidualBlock(cost_function, nullptr, pose_q.coeffs().data());
+}
 void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
     Visualize("/after_reg");
     usleep(100*1000);
@@ -312,6 +337,9 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         cout << "Add residuals" << endl;
         for(auto && c : correspondances){
             addSurfCostFactor(c, *problem);
+        }
+        for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+            AddRotationTerm(itr->first);
         }
         if(!correspondances.empty()){
             auto pose_first_iter = poses_.begin();

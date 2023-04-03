@@ -1,5 +1,5 @@
 #include "lio_sam/generics.h"
-#include "dmapping_refinement/utils.h"
+#include "dmapping_refinement/d_utils.h"
 #include "lidar.h"
 #include "odomEstimationClass.h"
 #include "dmapping_refinement/registration.h"
@@ -43,6 +43,7 @@ public:
   std::map<int,SurfElCloud> surfels_;
   std::map<int,NormalCloud::Ptr> surf_;
   std::map<int,std::vector<double>> stamps_;
+  std::map<int,Eigen::Quaterniond> imu_;
   ros::NodeHandle& nh_;
 
 

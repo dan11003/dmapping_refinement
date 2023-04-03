@@ -7,6 +7,7 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     for (auto& [index, surfel]: graph_->surfels_){
         surf_[index] = surfel.GetPointCloud();
         stamps_[index] = surfel.GetPointCloudTime();
+        imu_[index] = graph_->nodes[index].imu;
     }
     for (auto& [index, surf_cloud]: surf_){
         NormalCloud::Ptr filtered_normals(new NormalCloud());
@@ -99,7 +100,7 @@ void Fuser::Run(){
 void Fuser::Optimize(){
     std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters);
-    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, nh_);
+    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
     reg.Solve(parameters);
     //reg.Solve(parameters);
     cout << "solved" << endl;

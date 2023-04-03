@@ -9,7 +9,7 @@
 #include "eigen_conversions/eigen_kdl.h"
 #include "tf_conversions/tf_eigen.h"
 #include "dmapping_refinement/cost_function.h"
-#include "dmapping_refinement/utils.h"
+#include "dmapping_refinement/d_utils.h"
 #include <pcl/filters/normal_refinement.h>
 namespace dmapping {
 
@@ -37,14 +37,14 @@ public:
       Eigen::Quaterniond q;
   };
 
-  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, ros::NodeHandle& nh);
+  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh);
 
   void Solve(std::map<int,Pose3d>& solution);
 
   ceres::Problem* problem;
   ceres::Problem::Options problem_options;
   ceres::Solver::Summary summary;
-  ros::NodeHandle& nh_;
+
 
 
 
@@ -55,6 +55,8 @@ private:
   std::vector<Correspondance> FindCorrespondences(const int scan_i, const int scan_j);
 
   void addSurfCostFactor(const Correspondance& c, ceres::Problem& problem);
+
+  void AddRotationTerm(int idx);
 
   void TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree);
 
@@ -71,6 +73,8 @@ private:
   std::map<int,Pose3d> poses_;
   std::map<int,NormalCloud::Ptr> surf_;
   std::map<int,std::vector<double> > stamps_;
+  std::map<int,Eigen::Quaterniond > imu_;
+  ros::NodeHandle& nh_;
   std::map<int,Pose3d> velocities_;
 
   std::map<int,NormalCloud::Ptr> filtered_;

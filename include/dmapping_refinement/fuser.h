@@ -19,6 +19,7 @@ public:
     lidar::Lidar lidar_param;
     NScanRefinement::Parameters reg_par;
     int tot_scans;
+    int submap_size;
 
     void GetParametersFromRos(ros::NodeHandle& nh){
       nh.getParam("/keyframe_min_transl", keyframe_min_transl);
@@ -33,6 +34,8 @@ public:
       nh.param<int>("/outer_iterations", reg_par.outer_iterations, 2);
       nh.param<double>("/max_dist_association", reg_par.max_dist_association, 1.0);
       nh.param<int>("/tot_scans", tot_scans, 30);
+      nh.param<int>("/submap_size", submap_size, 6);
+
       //nh.getParam("/map_resolution", map_resolution);
     }
   };
@@ -63,8 +66,14 @@ private:
 
   void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters);
 
+  std::vector<std::map<int,bool>> DivideSubmap();
+
 
 };
+
+NScanRefinement::Pose3d ToPose3d(const Eigen::Isometry3d& T);
+
+Eigen::Isometry3d ToIsometry3d(const NScanRefinement::Pose3d& T);
 
 
 

@@ -9,7 +9,7 @@
     <param name="inner_iterations" type="double" value="5" />
     <param name="outer_iterations" type="double" value="5" />
     <param name="max_dist_association" type="double" value="0.8" />
-    <param name="tot_scans" type="double" value="55" />
+    <param name="tot_scans" type="double" value="22" />
 
 
 

@@ -2,6 +2,7 @@
 namespace dmapping{
 
 Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandle& nh) : par_(par), nh_(nh){
+    par_.submap_size = std::round(par_.submap_size/2)*2;
 
     graph_ = KeyFrameFilter(graph, par.keyframe_min_transl, par.keyframe_min_rot, par.tot_scans);
     for (auto& [index, surfel]: graph_->surfels_){
@@ -9,6 +10,15 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
         stamps_[index] = surfel.GetPointCloudTime();
         imu_[index] = graph_->nodes[index].imu;
     }
+    // Set constraints
+    for(auto itr = graph_->nodes.begin() ; std::next(itr) != graph_->nodes.end() ; itr++ ){
+        const int idx = itr->first;
+        const int nextIdx = std::next(itr)->first;
+        const Eigen::Isometry3d Tdiff = graph_->nodes[idx].T.inverse()*graph_->nodes[nextIdx].T;
+        graph_->AddConstraint(Tdiff, idx, nextIdx);
+    }
+
+    // Filter point clouds
     for (auto& [index, surf_cloud]: surf_){
         NormalCloud::Ptr filtered_normals(new NormalCloud());
         std::vector<pcl::Indices > k_indices;
@@ -18,7 +28,7 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
         pcl::search::KdTree<pcl::PointXYZINormal> search;
         search.setInputCloud (surf_cloud);
         search.nearestKSearch (*surf_cloud, pcl::Indices(), 3, k_indices, k_sqr_distances);
-        cout << "k_ind: " << k_indices.size() << endl;
+        //cout << "k_ind: " << k_indices.size() << endl;
         pcl::NormalRefinement<pcl::PointXYZINormal> refinement(k_indices, k_sqr_distances);
         refinement.setInputCloud(surf_cloud);
         refinement.filter(*filtered_normals);
@@ -26,8 +36,6 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     }
 }
 
-
-//n.segmented_scans = {pointcloud_surf_in, pointcloud_edge_in, pointcloud_less_edge_in};
 void Fuser::Visualize(){
     static tf::TransformBroadcaster Tbr;
     std::vector<tf::StampedTransform> trans_vek;
@@ -97,21 +105,66 @@ void Fuser::Run(){
         Visualize();
     }
 }
+
+std::vector<std::map<int,bool>> Fuser::DivideSubmap(){
+    const int halfStep = par_.submap_size/2;
+    const int fullStep = par_.submap_size;
+    Eigen::Isometry3d prev = graph_->nodes.begin()->second.T;
+    std::vector<std::map<int,bool>> submaps;
+
+    for(auto itrStart = graph_->nodes.begin() ;  std::distance(graph_->nodes.begin(),itrStart) + halfStep < graph_->nodes.size() ; std::advance(itrStart,halfStep) ){
+        std::map<int,NScanRefinement::Pose3d> parameters;
+        std::map<int,bool> submap;
+
+        for(auto itr = itrStart
+            ; std::distance(graph_->nodes.begin(),itr) < graph_->nodes.size() && std::distance(itrStart,itr) < fullStep
+            ; std::advance(itr,1) )
+        {
+            const int count = std::distance(itrStart,itr);
+            const bool first = (itrStart == graph_->nodes.begin());
+            const bool lockParameter = (!first && count >= halfStep);
+            const int idx = itr->first;
+            //cout  << idx << ", ";
+            submap[itr->first] = lockParameter;
+        }
+        submaps.push_back(submap);
+    }
+}
 void Fuser::Optimize(){
+
+    cout << "finished" << endl;
+    std::vector<std::map<int,bool>> submaps = DivideSubmap();
+    auto submap = submaps.front();
     std::map<int,NScanRefinement::Pose3d> parameters;
+    for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
+        const int currIdx = itr->first;
+        if(itr->second){ // lock this parameter
+            parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T);
+        }
+        else{
+            const int prevIdx = std::prev(itr)->first;
+            const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
+            const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
+            parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
+        }
+        //cout << "Get parameter: " << node.T.matrix() << endl;
+    }
+
+
+
+    /*std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters);
     NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
     reg.Solve(parameters);
     //reg.Solve(parameters);
     cout << "solved" << endl;
-    SetParameters(parameters);
+    SetParameters(parameters);*/
 }
 
 void Fuser::GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters){
     parameters.clear();
     for (const auto& [index, node]: graph_->nodes) {
-        parameters[index].p = node.T.translation();
-        parameters[index].q = Eigen::Quaterniond(node.T.linear());
+        parameters[index] = ToPose3d(node.T);
         //cout << "Get parameter: " << node.T.matrix() << endl;
     }
 }
@@ -121,6 +174,13 @@ void Fuser::SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameter
         graph_->nodes[index].T = EigenCombine(parameter.q, parameter.p);
         //cout << "Set parameter: " << graph->nodes[index].T.matrix() << endl;
     }
+}
+
+Eigen::Isometry3d ToIsometry3d(const NScanRefinement::Pose3d& T){
+    return EigenCombine(T.q, T.p);
+}
+NScanRefinement::Pose3d ToPose3d(const Eigen::Isometry3d& T){
+    return NScanRefinement::Pose3d{T.translation(), Eigen::Quaterniond(T.linear()) };
 }
 
 }

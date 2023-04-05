@@ -82,7 +82,7 @@ class lineRefinement{
     const pcl::PointCloud<PointType>::Ptr input_;
 };
 
-class RotErrorTerm {
+/*class RotErrorTerm {
  public:
   RotErrorTerm(Eigen::Quaterniond q_a_measured,
                        Eigen::Matrix<double, 3, 3> sqrt_information)
@@ -114,7 +114,7 @@ class RotErrorTerm {
   const Eigen::Quaterniond q_a_measured_inv_;
   // The square root of the measurement information matrix.
   const Eigen::Matrix<double, 3, 3> sqrt_information_;
-};
+};*/
 
 /*struct LineCostFunctor {
     LineCostFunctor(const Eigen::Matrix<double,3,1> pnt) : pnt_(pnt){

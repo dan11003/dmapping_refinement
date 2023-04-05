@@ -299,7 +299,7 @@ void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr)
     vis_pub.publish(line_strip);
 }
 
-void NScanRefinement::AddRotationTerm(int idx){
+/*void NScanRefinement::AddRotationTerm(int idx){
     const auto& imu_q(imu_[idx]);
     Eigen::Quaterniond& pose_q(poses_[idx].q);
     //Eigen::Vector3d variance(1.0/(0.001), 1.0/0.001, 1.0/10000.0);
@@ -307,7 +307,7 @@ void NScanRefinement::AddRotationTerm(int idx){
     Eigen::Matrix3d sqrt_inf = variance.asDiagonal();
     ceres::CostFunction* cost_function = dmapping::RotErrorTerm::Create(imu_q, sqrt_inf);
     problem->AddResidualBlock(cost_function, nullptr, pose_q.coeffs().data());
-}
+}*/
 void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
     Visualize("/after_reg");
     usleep(100*1000);

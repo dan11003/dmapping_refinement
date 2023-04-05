@@ -338,9 +338,9 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         for(auto && c : correspondances){
             addSurfCostFactor(c, *problem);
         }
-        for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+        /*for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             AddRotationTerm(itr->first);
-        }
+        }*/
         if(!correspondances.empty()){
             auto pose_first_iter = poses_.begin();
             problem->SetParameterBlockConstant(pose_first_iter->second.p.data());

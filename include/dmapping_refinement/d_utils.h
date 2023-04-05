@@ -96,7 +96,7 @@ class RotErrorTerm {
     Eigen::Map<const Eigen::Quaternion<T>> q_new_calib(q_new_calib_ptr);
 
     // Compute the error between the two orientation estimates.
-    Eigen::Quaternion<T> delta_q = q_a_measured_inv_.template cast<T>() * q_a*;
+    Eigen::Quaternion<T> delta_q = q_a_measured_inv_.template cast<T>() * q_a;
     Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals(residuals_ptr);
     residuals.template block<3, 1>(0, 0) = T(2.0) * delta_q.vec();
     residuals.applyOnTheLeft(sqrt_information_.template cast<T>());

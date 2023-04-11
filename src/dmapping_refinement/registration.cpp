@@ -3,7 +3,7 @@
 namespace dmapping {
 
 NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh) : par_(par), poses_(poses), surf_(surf), stamps_(stamps), imu_(imu), nh_(nh){
-  loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
+  //loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
   options.max_num_iterations = par_.inner_iterations;
   options.minimizer_progress_to_stdout = true;
   options.num_threads = 6;
@@ -214,7 +214,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
   ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
   //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
   //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
-  ceres::LossFunction* scaled_loss = new ceres::ScaledLoss(loss_function, c.weight, ceres::TAKE_OWNERSHIP);
+  ceres::LossFunction* scaled_loss = new ceres::ScaledLoss(new ceres::HuberLoss(0.1), c.weight, ceres::TAKE_OWNERSHIP);
   if(nr_residual++% 1000 == 0){
     //std::cout << "Add res: " << distance << std::endl;
     //cout <<"residual: " << c.src_scan <<" - "<< c.target_scan << endl;
@@ -323,7 +323,8 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
   Visualize("/after_reg");
 
   for (int i = 0; i < par_.outer_iterations ; i++) {
-    problem = new ceres::Problem();
+    ceres::Problem problem;
+
     TransformCommonFrame(filtered_, transformed_, true);
     std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
     //cout <<"scan pairs: " << scan_pairs.size() << endl;
@@ -345,7 +346,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
     //cout <<"Total: " << correspondances.size() << endl;
     //cout << "Add residuals" << endl;
     for(auto && c : correspondances){
-      addSurfCostFactor(c, *problem);
+      addSurfCostFactor(c, problem);
     }
     /*for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             AddRotationTerm(itr->first);
@@ -355,10 +356,10 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
 
       ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
       for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
-        problem->SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
+        problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
         if(locked_[itr->first]){
-          problem->SetParameterBlockConstant(pose_first_iter->second.p.data());
-          problem->SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
+          problem.SetParameterBlockConstant(pose_first_iter->second.p.data());
+          problem.SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
           //cout << "locked ";
         }
         else{
@@ -374,7 +375,8 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         //const int idx = itr->first;
         //cout <<"P: " << poses_[idx].p.transpose() << " - q: " <<  poses_[idx].q.coeffs().transpose() << " - v: " << velocities_[idx].p.transpose() << endl;;
       }*/
-      ceres::Solve(options, problem, &summary);
+      ceres::Solve(options, &problem, &summary);
+     cout << "solved" << endl;
 
       //cout << summary.FullReport() << endl;
       //cout << "score: " << summary.final_cost / summary.num_residuals << endl;

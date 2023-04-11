@@ -41,11 +41,11 @@ public:
 
   void Solve(std::map<int,Pose3d>& solution);
 
+  void Solve(std::map<int,Pose3d>& solution, const std::map<int,bool>& locked);
+
   ceres::Problem* problem;
   ceres::Problem::Options problem_options;
   ceres::Solver::Summary summary;
-
-
 
 
 private:
@@ -76,6 +76,7 @@ private:
   std::map<int,Eigen::Quaterniond > imu_;
   ros::NodeHandle& nh_;
   std::map<int,Pose3d> velocities_;
+  std::map<int,bool> locked_;
 
   std::map<int,NormalCloud::Ptr> filtered_;
   std::map<int,Eigen::MatrixXf> filtered_eig_;

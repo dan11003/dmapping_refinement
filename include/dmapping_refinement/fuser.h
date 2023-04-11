@@ -66,6 +66,10 @@ private:
 
   void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters);
 
+  /*!
+   * \brief DivideSubmap
+   * \return  index (int) and locked (bool)
+   */
   std::vector<std::map<int,bool>> DivideSubmap();
 
 

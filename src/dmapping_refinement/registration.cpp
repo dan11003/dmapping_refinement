@@ -23,9 +23,9 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     const int idx = itr->first;
     filtered_[idx] = NormalCloud().makeShared();
     pcl::VoxelGrid<pcl::PointXYZINormal> sor;
-    sor.setMinimumPointsNumberPerVoxel(2);
+    sor.setMinimumPointsNumberPerVoxel(1);
     sor.setInputCloud(surf_[idx]);
-    sor.setLeafSize (0.1f, 0.1f, 0.1f);
+    sor.setLeafSize (0.05f, 0.05f, 0.05f);
     sor.filter (*filtered_[idx]);
     cout <<"Downsampling rate: " << (double)filtered_[idx]->size() / surf_[idx]->size()  << endl;
   }

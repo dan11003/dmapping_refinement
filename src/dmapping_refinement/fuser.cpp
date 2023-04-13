@@ -95,14 +95,14 @@ void Fuser::Visualize(){
 }
 
 void Fuser::Run(){
-    Visualize();
+    //Visualize();
     usleep(1000*1000);
-    Visualize();
+    //Visualize();
     Optimize();
     ros::Rate r(0.2);
     while(ros::ok()){
         r.sleep();
-        Visualize();
+        //Visualize();
     }
 }
 
@@ -121,38 +121,33 @@ void Fuser::RunDebugger(){
         long value = std::strtol(input.c_str(), &endp, 10);
         cout << "(r)egister, (v)isualize, <number> skip to" << endl;
 
-        if(input =="r"){
-            cout << "register" << endl;
-            register_scans = true;
-        }
-        if(input =="s"){
-            cout << "s" << endl;
-            register_scans = true;
-        }
-        else if(input =="v"){
-            cout << "visualize" << endl;
-            Visualize();
-        }
-        else if (endp == input.c_str()) {
-            /* conversion failed completely, value is 0, */
-            /* endp points to start of given string */
-            cout << "conversion failed completely, value is 0, endp points to start of given string " << endl;
-        }
-        else if (*endp != 0) {
-            cout <<" got value, but entire string was not valid number, endp points to first invalid character " << endl;
-        }
+        if(input =="r"){ cout << "register" << endl;       register_scans = true; }
+        else if(input =="v"){ cout << "visualize" << endl; Visualize(); }
+        else if (endp == input.c_str()) { cout << "conversion failed completely, value is 0, endp points to start of given string " << endl; }
+        else if (*endp != 0) { cout <<" got value, but entire string was not valid number, endp points to first invalid character " << endl; }
         else {
-            start = value;
-            cout << "skip to " << start << endl;
-        }
-
-        if(register_scans){
-            std::map<int,bool> submap;
-            auto itrFirst = std::advance(graph_->nodes.begin(), start);
-
-            for(auto itr = itrFirst ;  std::distance(itrFirst,itr)  < graph_->nodes.size() && std::distance(itrFirst,itr) < par_.submap_size ; itr++ ){
-                submap[itr->first] = (itr == itrFirst); // first true else false
+            if(graph_->nodes.find(start) != graph_->nodes.end()  ){
+                start = value;
+                cout << "skip to " << start << endl;
+                cout <<"node id: " <<  std::next(graph_->nodes.begin(), start)->first << endl;
             }
+            else{
+                cout << "index out of range " << endl;
+            }
+        }
+        if(register_scans){
+            cout << "Register" << endl;
+            std::map<int,bool> submapLock;
+            auto itrFirst = graph_->nodes.find(start);
+            for(auto itr = itrFirst ;  std::distance(itrFirst,itr)  < graph_->nodes.size() && std::distance(itrFirst,itr) < par_.submap_size ; itr++ ){
+                submapLock[itr->first] = (itr == itrFirst); // first true else false
+            }
+            std::map<int,NScanRefinement::Pose3d> parameters;
+            for(auto && [index,lock] : submapLock){
+                parameters[index] = ToPose3d(graph_->nodes[index].T);
+            }
+            NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+            reg.Solve(parameters, submapLock);
 
         }
 
@@ -166,43 +161,62 @@ std::vector<std::map<int,bool>> Fuser::DivideSubmap(){
     const int fullStep = par_.submap_size;
     Eigen::Isometry3d prev = graph_->nodes.begin()->second.T;
     std::vector<std::map<int,bool>> submaps;
+    int nr = 0;
 
     for(auto itrStart = graph_->nodes.begin() ;  std::distance(graph_->nodes.begin(),itrStart) + halfStep < graph_->nodes.size() ; std::advance(itrStart,halfStep) ){
         std::map<int,NScanRefinement::Pose3d> parameters;
         std::map<int,bool> submap;
+        cout  << "submap: ";
 
         for(auto itr = itrStart
             ; std::distance(graph_->nodes.begin(),itr) < graph_->nodes.size() && std::distance(itrStart,itr) < fullStep
             ; std::advance(itr,1) )
         {
             const int count = std::distance(itrStart,itr);
-            const bool first = (itrStart == graph_->nodes.begin());
-            const bool lockParameter = (!first && count >= halfStep);
+            const bool firstSubmap = (itrStart == graph_->nodes.begin());
+            bool lockParameter = true;// Generally keep parameter locked
+            if(count >= halfStep || (firstSubmap && nr++ > 0) ) { //Except for 2nd half of submap, or for index 1..halfStep of first submap
+                lockParameter = false;
+            }
+            //const bool lockParameter = (!first && count >= halfStep); // first submap? always unlock
             const int idx = itr->first;
-            //cout  << idx << ", ";
+            cout  << idx << ", ";
             submap[itr->first] = lockParameter;
         }
+        cout << endl;
         submaps.push_back(submap);
     }
+    return submaps;
 }
 void Fuser::Optimize(){
 
-    cout << "finished" << endl;
+    cout << "submap partition" << endl;
     std::vector<std::map<int,bool>> submaps = DivideSubmap();
-    auto submap = submaps.front();
-    std::map<int,NScanRefinement::Pose3d> parameters;
-    for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
-        const int currIdx = itr->first;
-        if(itr->second){ // lock this parameter
-            parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // this parameter was already optimized, keep parameter
+    for (auto&& submap : submaps) {
+        std::map<int,NScanRefinement::Pose3d> parameters;
+
+        for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
+            const int currIdx = itr->first;
+            const bool lockParameter = itr->second;
+            //cout << currIdx <<", " << endl;
+
+            if(lockParameter){ // lock this parameter
+                cout <<"lock: "<< currIdx <<", ";
+                parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
+            }
+            else{
+                cout <<"unlock: "<< currIdx <<", ";
+                const int prevIdx = std::prev(itr)->first;
+                const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
+                const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
+                parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
+            }
+            //cout << "Get parameter: " << node.T.matrix() << endl;
         }
-        else{
-            const int prevIdx = std::prev(itr)->first;
-            const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
-            const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
-            parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps. This reuses the odometry prior relatively
-        }
-        //cout << "Get parameter: " << node.T.matrix() << endl;
+        cout << endl;
+        NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+        reg.Solve(parameters, submap);
+        SetParameters(parameters);
     }
 
 

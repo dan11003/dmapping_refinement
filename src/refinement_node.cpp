@@ -106,6 +106,8 @@ public:
     void Optimize(){
         dmapping::Fuser fuser(fuserpar, graph, nh);
         //fuser.Run();
+        cout << "run debugger" << endl;
+        fuser.RunDebugger();
     }
     boost::shared_ptr<PoseGraph> graph = nullptr;
 

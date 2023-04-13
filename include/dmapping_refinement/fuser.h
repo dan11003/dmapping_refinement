@@ -3,6 +3,7 @@
 #include "lidar.h"
 #include "odomEstimationClass.h"
 #include "dmapping_refinement/registration.h"
+#include <cstdlib>
 
 
 namespace dmapping{
@@ -56,6 +57,8 @@ public:
   bool ComputeSurfels();
 
   virtual void Run();
+
+  void RunDebugger();
 
   virtual void Optimize();
 

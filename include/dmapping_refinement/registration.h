@@ -27,9 +27,10 @@ class NScanRefinement
 public:
   struct Parameters
   {
-    int outer_iterations = 1;
-    int inner_iterations = 1;
-    double  max_dist_association = 0.5;
+    int outer_iterations = 5;
+    int inner_iterations = 5;
+    double  max_dist_association = 1;
+    std::string loss = "huber";
   };
   struct Pose3d
   {

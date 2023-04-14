@@ -4,7 +4,13 @@ namespace dmapping{
 Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandle& nh) : par_(par), nh_(nh){
     par_.submap_size = std::round(par_.submap_size/2)*2;
 
-    graph_ = KeyFrameFilter(graph, par.keyframe_min_transl, par.keyframe_min_rot, par.tot_scans);
+    if(par.use_keyframe){
+        cout << "Keyframe filtering" << endl;
+        graph_ = KeyFrameFilter(graph, par.keyframe_min_transl, par.keyframe_min_rot, par.tot_scans);
+    }
+    else{
+        graph_ = graph;
+    }
     for (auto& [index, surfel]: graph_->surfels_){
         surf_[index] = surfel.GetPointCloud();
         stamps_[index] = surfel.GetPointCloudTime();
@@ -19,20 +25,40 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     }
 
     // Filter point clouds
-    for (auto& [index, surf_cloud]: surf_){
-        NormalCloud::Ptr filtered_normals(new NormalCloud());
-        std::vector<pcl::Indices > k_indices;
-        std::vector<std::vector<float> > k_sqr_distances;
+    //for (auto itr = surf_.begin() ; itr != surf_.end() ; itr++){
+    //for (auto& [index, surf_cloud]: surf_){
+    cout << "Normal refinement started" << endl;
+    #pragma omp parallel
+    {
+        #pragma omp single
+        {
+            for (auto itr = surf_.begin() ; itr != surf_.end() ; itr++){
+                #pragma omp task
+                {
+                    //do something
 
-        // Run search
-        pcl::search::KdTree<pcl::PointXYZINormal> search;
-        search.setInputCloud (surf_cloud);
-        search.nearestKSearch (*surf_cloud, pcl::Indices(), 3, k_indices, k_sqr_distances);
-        //cout << "k_ind: " << k_indices.size() << endl;
-        pcl::NormalRefinement<pcl::PointXYZINormal> refinement(k_indices, k_sqr_distances);
-        refinement.setInputCloud(surf_cloud);
-        refinement.filter(*filtered_normals);
-        surf_[index] = filtered_normals;
+                    const int index = itr->first;
+                    auto surf_cloud = itr->second;
+                    NormalCloud::Ptr filtered_normals(new NormalCloud());
+                    std::vector<pcl::Indices > k_indices;
+                    std::vector<std::vector<float> > k_sqr_distances;
+
+                    // Run search
+                    pcl::search::KdTree<pcl::PointXYZINormal> search;
+                    search.setInputCloud (surf_cloud);
+                    search.nearestKSearch (*surf_cloud, pcl::Indices(), 3, k_indices, k_sqr_distances);
+                    //cout << "k_ind: " << k_indices.size() << endl;
+                    pcl::NormalRefinement<pcl::PointXYZINormal> refinement(k_indices, k_sqr_distances);
+                    refinement.setInputCloud(surf_cloud);
+                    refinement.filter(*filtered_normals);
+                    #pragma omp critical
+                    {
+                        surf_[index] = filtered_normals;
+                    }
+                }
+            }
+        }
+        cout << "Normal refinement finished" << endl;
     }
 }
 
@@ -114,22 +140,23 @@ void Fuser::RunDebugger(){
     char *endp;
 
     while(ros::ok()){
-        cout << "(r)egister, (s)tatus, (v)isualize, <number> set start" << endl;
+        cout << "(r)egister, (s)tatus, (v)isualize, <number> set start, (e)xit" << endl;
         std::cin.clear();
         std::cin >> input;
         bool register_scans = false;
         long value = std::strtol(input.c_str(), &endp, 10);
         cout << "(r)egister, (v)isualize, <number> skip to" << endl;
 
-        if(input =="r"){ cout << "register" << endl;       register_scans = true; }
-        else if(input =="v"){ cout << "visualize" << endl; Visualize(); }
+        if(input =="r"){ cout << "(r)egister" << endl;       register_scans = true; }
+        if(input =="e"){cout << "(e)xit" << endl; exit(0); }
+        else if(input =="v"){ cout << "(v)isualize" << endl; Visualize(); }
         else if (endp == input.c_str()) { cout << "conversion failed completely, value is 0, endp points to start of given string " << endl; }
         else if (*endp != 0) { cout <<" got value, but entire string was not valid number, endp points to first invalid character " << endl; }
         else {
-            if(graph_->nodes.find(start) != graph_->nodes.end()  ){
+            if( graph_->nodes.find(value) != graph_->nodes.end()  ){
                 start = value;
                 cout << "skip to " << start << endl;
-                cout <<"node id: " <<  std::next(graph_->nodes.begin(), start)->first << endl;
+                //cout <<"node id: " <<  graph_->nodes.find(start)->first << endl;
             }
             else{
                 cout << "index out of range " << endl;
@@ -146,7 +173,11 @@ void Fuser::RunDebugger(){
             for(auto && [index,lock] : submapLock){
                 parameters[index] = ToPose3d(graph_->nodes[index].T);
             }
+            cout << "Coarse registration" << endl;
             NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+            reg.Solve(parameters, submapLock);
+            NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
+            cout << "Fine registration" << endl;
             reg.Solve(parameters, submapLock);
 
         }
@@ -215,6 +246,9 @@ void Fuser::Optimize(){
         }
         cout << endl;
         NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+        reg.Solve(parameters, submap);
+        NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
+        cout << "Fine grained" << endl;
         reg.Solve(parameters, submap);
         SetParameters(parameters);
     }

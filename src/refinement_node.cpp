@@ -104,7 +104,9 @@ public:
         }
     }
     void Optimize(){
+        cout << "Start fuser" << endl;
         dmapping::Fuser fuser(fuserpar, graph, nh);
+        cout << "Initialized fuser" << endl;
         //fuser.Run();
         cout << "run debugger" << endl;
         fuser.RunDebugger();

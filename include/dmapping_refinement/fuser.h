@@ -17,15 +17,17 @@ public:
     double keyframe_min_transl;
     double keyframe_min_rot;
     bool use_keyframe;
+    double min_dist_association_factor;
     lidar::Lidar lidar_param;
     NScanRefinement::Parameters reg_par;
     int tot_scans;
     int submap_size;
 
+
     void GetParametersFromRos(ros::NodeHandle& nh){
       nh.getParam("/keyframe_min_transl", keyframe_min_transl);
       nh.getParam("/keyframe_min_rot", keyframe_min_rot);
-      nh.getParam("/use_keyframe", keyframe_min_transl);
+      nh.getParam("/use_keyframe", use_keyframe);
       nh.param<double>("/scan_period", lidar_param.scan_period, 0.1);
       nh.param<double>("/vertical_angle", lidar_param.horizontal_angle, 2);
       nh.param<double>("/max_dis", lidar_param.max_distance, 130);
@@ -34,6 +36,7 @@ public:
       nh.param<int>("/inner_iterations", reg_par.inner_iterations, 3);
       nh.param<int>("/outer_iterations", reg_par.outer_iterations, 2);
       nh.param<double>("/max_dist_association", reg_par.max_dist_association, 1.0);
+      //nh.param<double>("/min_dist_association_factor", reg_par.min_dist_association_factor, 0.5);
       nh.param<int>("/tot_scans", tot_scans, 30);
       nh.param<int>("/submap_size", submap_size, 6);
 

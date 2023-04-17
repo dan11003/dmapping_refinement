@@ -6,7 +6,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     //loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
     options.max_num_iterations = par_.inner_iterations;
     options.minimizer_progress_to_stdout = true;
-    options.num_threads = 6;
+    options.num_threads = 12;
     vis_pub = nh_.advertise<visualization_msgs::Marker>("/correspondances",100);
     normal_pub = nh_.advertise<visualization_msgs::Marker>("/normals",100);
     //options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
@@ -79,9 +79,9 @@ void NScanRefinement::Visualize(const std::string& topic){
 
     PublishCloud(topic+"unfiltered", *surf_unfiltered, "world", t_cloud, nh_);
     pcl::VoxelGrid<pcl::PointXYZINormal> sor;
-    sor.setMinimumPointsNumberPerVoxel(2);
+    sor.setMinimumPointsNumberPerVoxel(1);
     sor.setInputCloud(surf_unfiltered);
-    sor.setLeafSize (0.05f, 0.05f, 0.05f);
+    sor.setLeafSize (par_.resolution, par_.resolution, par_.resolution);
     sor.filter (*surf_downsampled);
     PublishCloud(topic+"unfiltered_downsampled", *surf_downsampled, "world", t_cloud, nh_);
     //cout << "Publish unfiltered: " << surf_unfiltered->size() << " to " << topic << endl;
@@ -326,7 +326,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         for(auto itr = std::next(poses_.begin()) ; itr != poses_.end() ; itr++)
             locked_[itr->first] = false; //unlock following parameter blocks
     }
-    cout << "Solve - Visualize" << endl;
+    //cout << "Solve - Visualize" << endl;
     Visualize("/after_reg");
     usleep(100*1000);
     Visualize("/after_reg");
@@ -338,7 +338,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         //cout <<"scan pairs: " << scan_pairs.size() << endl;
         std::vector<Correspondance> correspondances;
-        #pragma omp parallel
+        #pragma omp parallel num_threads (12)
         {
             #pragma omp single
             {
@@ -365,22 +365,28 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         TransformCommonFrame(surf_, raw_transformed, true);
         VisualizePointCloudNormal(raw_transformed, "normals");
 
-
-        //cout <<"Total: " << correspondances.size() << endl;
-        //cout << "Add residuals" << endl;
         for(auto && c : correspondances){
             addSurfCostFactor(c, problem);
         }
-        /*for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-            AddRotationTerm(itr->first);
+        float corr_per_scan = (double)correspondances.size() / (double)poses_.size();
+        //cout << "corr_per_scan: " << corr_per_scan << ", correspondances: " <<   correspondances.size() << endl;
+
+        /*for(auto itr = poses_.begin() ; itr != std::prev(poses_.end()); itr++){
+            const int idx_now = itr->first;
+            const int idx_next = std::next(itr)->first;
+            ceres::CostFunction* vel_constraints_func = VelocityConstraint::Create(corr_per_scan);
+            //ceres::LossFunction* loss = new ceres::HuberLoss(0.1);
+            problem.AddResidualBlock(vel_constraints_func, nullptr, poses_[idx_now].p.data(), velocities_[idx_now].p.data(), poses_[idx_next].p.data());
         }*/
+
         if(!correspondances.empty()){
             auto pose_first_iter = poses_.begin();
 
             ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
             for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+                const int idx = itr->first;
                 problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
-                if(locked_[itr->first]){
+                if(locked_[idx]){
                     problem.SetParameterBlockConstant(pose_first_iter->second.p.data());
                     problem.SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
                     //cout << "locked ";
@@ -388,24 +394,24 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
                 else{
                     //cout << "unlocked ";
                 }
-                //problem->SetParameterBlockConstant(velocities_[itr->first].p.data());
+                //problem.SetParameterBlockConstant(velocities_[idx].p.data());
             }
+
 
             cout << "Minimize" << endl;
             ceres::Solve(options, &problem, &summary);
             cout << "solved" << endl;
-
             //cout << summary.FullReport() << endl;
             //cout << "score: " << summary.final_cost / summary.num_residuals << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
 
             //cout << "after solve: " << endl;
-            for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
+            /*for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
                 const int idx = itr->first;
-                //cout << poses_[idx].p.transpose() << " - " <<  poses_[idx].q.coeffs().transpose() << endl;  // velocities_[idx].p.transpose() << endl;;
+                //cout << poses_[idx].p.transpose() << " - "  << velocities_[idx].p.transpose() << endl; // endl; //poses_[idx].q.coeffs().transpose()
                 const std::string filename =  "/home/daniel/Documents/cloud/cloud_" + std::to_string(itr->first) + ".pcd";
-                pcl::io::savePCDFileBinary(filename, *transformed_[itr->first]);
-            }
+                //pcl::io::savePCDFileBinary(filename, *transformed_[itr->first]);
+            }*/
         }
 
         Visualize("/after_reg");

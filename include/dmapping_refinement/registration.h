@@ -30,7 +30,8 @@ public:
     int outer_iterations = 5;
     int inner_iterations = 5;
     double  max_dist_association = 1;
-    std::string loss = "huber";
+    std::string loss = "cauchy";
+    float resolution = 0.1;
   };
   struct Pose3d
   {
@@ -97,11 +98,6 @@ private:
 
   ros::Publisher vis_pub, normal_pub;
 };
-
-void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters, const boost::shared_ptr<PoseGraph> graph);
-
-void SetParameters(const std::map<int,NScanRefinement::Pose3d>& parameters, boost::shared_ptr<PoseGraph> graph);
-
 
 
 

@@ -38,6 +38,8 @@ struct PointToPlaneErrorGlobal{
     }
 };
 
+
+
 struct PointToPlaneErrorGlobalP2P{
 
     const Eigen::Vector3d p_dst;
@@ -121,6 +123,35 @@ struct PointToPlaneErrorGlobalTime{
 
         return true;
     }
+};
+
+struct VelocityConstraint{
+
+
+    VelocityConstraint(const double scaling_factor) : scaling_factor_(scaling_factor) {}
+
+    // Factory to hide the construction of the CostFunction object from the client code.
+    static ceres::CostFunction* Create(const double scaling_factor) {
+        return (new ceres::AutoDiffCostFunction<VelocityConstraint,3, 3, 3, 3>(new VelocityConstraint(scaling_factor)));
+    }
+
+    template <typename T>
+    bool operator()(const T* const t_now_par, const T* const v_now_par, const T* const t_next_par, T* residuals) const {
+
+
+        const Eigen::Matrix<T,3,1> t_now(t_now_par);
+        const Eigen::Matrix<T,3,1> v_now(v_now_par);
+        const Eigen::Matrix<T,3,1> t_next(t_next_par);
+        const T scaling = T(scaling_factor_);
+
+        const Eigen::Matrix<T,3,1> err = t_now+v_now-t_next;
+        residuals[0] = scaling*err[0];
+        residuals[1] = scaling*err[1];
+        residuals[2] = scaling*err[2];
+
+        return true;
+    }
+    double scaling_factor_;
 };
 
 #endif // COST_FUNCTION_H

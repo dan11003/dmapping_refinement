@@ -22,6 +22,7 @@ public:
     NScanRefinement::Parameters reg_par;
     int tot_scans;
     int submap_size;
+    int max_time = 60;
 
 
     void GetParametersFromRos(ros::NodeHandle& nh){
@@ -39,6 +40,9 @@ public:
       //nh.param<double>("/min_dist_association_factor", reg_par.min_dist_association_factor, 0.5);
       nh.param<int>("/tot_scans", tot_scans, 30);
       nh.param<int>("/submap_size", submap_size, 6);
+      nh.param<float>("/resolution", reg_par.resolution, 0.1);
+      nh.param<int>("/max_time", max_time, 0);
+
 
       //nh.getParam("/map_resolution", map_resolution);
     }
@@ -63,9 +67,9 @@ public:
 
   void RunDebugger();
 
-  virtual void Optimize();
-
   void Visualize();
+
+  void Save(const std::string& directory);
 
 private:
   void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters);

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Thu_2023.04.13_11:07:35/graph.pg" />
+    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Mon_2023.04.17_18:56:13/graph.pg" />
     <!--arg name="slam_param_file" default="$(find lio_sam)/config/params_structor_outdoor.yaml" /-->
     <param name="keyframe_min_transl" type="double" value="0.1" /> <!-- 0.05 -->
     <param name="keyframe_min_rot" type="double" value="1" /> <!-- 0.035 -->
@@ -10,7 +10,13 @@
     <param name="outer_iterations" type="double" value="5" />
     <param name="max_dist_association" type="double" value="1.0" />
     <param name="tot_scans" type="double" value="0" />
-    <param name="submap_size" type="double" value="20" />
+    <param name="submap_size" type="double" value="200" />
+    <param name="resolution" type="double" value="0.3" />
+    <param name="debugger" type="bool" value="true" />
+    <param name="directory_output" type="string" value="/home/daniel/Documents/cloud/" />
+    <param name="export_pcd" type="bool" value="true" />
+    <param name="max_time" type="int" value="100" />
+
 
 
 

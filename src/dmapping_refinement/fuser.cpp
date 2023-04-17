@@ -120,20 +120,23 @@ void Fuser::Visualize(){
 
 }
 
-void Fuser::Run(){
-    //Visualize();
-    usleep(1000*1000);
-    //Visualize();
-    Optimize();
-    ros::Rate r(0.2);
-    while(ros::ok()){
-        r.sleep();
-        //Visualize();
+
+void Fuser::Save(const std::string& directory){
+    std::map<int,NScanRefinement::Pose3d> parameters;
+    GetParameters(parameters);
+    cout << "Saving: " << parameters.size() << " to " << directory << endl;
+    for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
+        const int idx = itr->first;
+        NormalCloud::Ptr tmp_0(new NormalCloud());
+        pcl::transformPointCloud(*surf_[idx], *tmp_0, itr->second.T.matrix());
+        const std::string filename =  directory + std::to_string(idx) + ".pcd";
+        pcl::io::savePCDFileBinary(filename, *tmp_0);
     }
+    cout << "Saving finished" << endl;
 }
 
 void Fuser::RunDebugger(){
-    int start = 0;
+    int start = 1;
     int end = std::distance(graph_->nodes.begin(), graph_->nodes.end());
 
     std::string input = "";
@@ -176,10 +179,9 @@ void Fuser::RunDebugger(){
             cout << "Coarse registration" << endl;
             NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
             reg.Solve(parameters, submapLock);
-            NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
+            /*NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
             cout << "Fine registration" << endl;
-            reg.Solve(parameters, submapLock);
-
+            reg.Solve(parameters, submapLock);*/
         }
 
 
@@ -219,8 +221,9 @@ std::vector<std::map<int,bool>> Fuser::DivideSubmap(){
     }
     return submaps;
 }
-void Fuser::Optimize(){
+void Fuser::Run(){
 
+    ros::Time t0 = ros::Time::now();
     cout << "submap partition" << endl;
     std::vector<std::map<int,bool>> submaps = DivideSubmap();
     for (auto&& submap : submaps) {
@@ -232,29 +235,35 @@ void Fuser::Optimize(){
             //cout << currIdx <<", " << endl;
 
             if(lockParameter){ // lock this parameter
-                cout <<"lock: "<< currIdx <<", ";
+                //cout <<"lock: "<< currIdx <<", ";
                 parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
             }
             else{
-                cout <<"unlock: "<< currIdx <<", ";
+                //cout <<"unlock: "<< currIdx <<", ";
                 const int prevIdx = std::prev(itr)->first;
                 const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
                 parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
             }
             //cout << "Get parameter: " << node.T.matrix() << endl;
+            if(!ros::ok())
+                break;
         }
         cout << endl;
         NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
         reg.Solve(parameters, submap);
-        NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
+        SetParameters(parameters);
+        double timeElapsed = (ros::Time::now() - t0).toSec();
+        cout << "Elapsed: " << timeElapsed << endl;
+        if(par_.max_time > 0 && timeElapsed > par_.max_time){
+            return;
+        }
+        /*NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
         cout << "Fine grained" << endl;
         reg.Solve(parameters, submap);
-        SetParameters(parameters);
+        SetParameters(parameters);*/
     }
-
-
-
+    cout << "Finish Fuser" << endl;
     /*std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters);
     NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);

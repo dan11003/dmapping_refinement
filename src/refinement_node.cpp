@@ -56,13 +56,14 @@ public:
     bool save_BALM = true;
     bool save_odom = false;
     bool export_pcd = true;
+    bool run_debugger = true;
     std::string constraint_graph_path;
     dmapping::Fuser::Parameters fuserpar;
 
 
     RefinementNode(ros::NodeHandle& handle) : nh(handle) {
         Initialize();
-        Optimize();
+        RunFuser();
     }
     bool ComputeSurfels(){
         if(graph->surfels_.empty()){
@@ -92,6 +93,12 @@ public:
         nh.getParam("/directory_output", directory);
         nh.getParam("/output_downsample_size", output_downsample_size);
         nh.getParam("/constraint_graph_path", constraint_graph_path);
+        nh.getParam("/debugger", run_debugger);
+        nh.getParam("/export_pcd", export_pcd);
+
+
+
+
         if(!(PoseGraph::LoadGraph(constraint_graph_path+"precompute", graph) || PoseGraph::LoadGraph(constraint_graph_path, graph)) ){
             exit(0);
         }
@@ -103,14 +110,28 @@ public:
             cout << "Loaded precomputed surfels" << endl;
         }
     }
-    void Optimize(){
+    void RunFuser(){
         cout << "Start fuser" << endl;
         dmapping::Fuser fuser(fuserpar, graph, nh);
         cout << "Initialized fuser" << endl;
-        //fuser.Run();
-        cout << "run debugger" << endl;
-        fuser.RunDebugger();
+        if(run_debugger)
+            fuser.RunDebugger();
+        else
+            fuser.Run();
+        if(export_pcd){
+            cout << "Save" << endl;
+            fuser.Save(directory);
+        }
+        else
+            cout << "Do not save" << endl;
+
+        ros::Rate r(0.2);
+        while(ros::ok()){
+            r.sleep();
+            //Visualize();
+        }
     }
+
     boost::shared_ptr<PoseGraph> graph = nullptr;
 
 };

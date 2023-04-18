@@ -351,5 +351,34 @@ bool lineRefinement::Fit(const Eigen::Matrix<double,3,1>& X, Eigen::Matrix<doubl
     ceres::Solve(options, &problem, &summary);
     v = q*Eigen::Vector3d(1,0,0);
 }
+void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name, ros::Publisher& pub){
+    visualization_msgs::Marker line_strip;
+    line_strip.header.frame_id = "world";
+    line_strip.ns = name;
+    line_strip.action = visualization_msgs::Marker::ADD;
+    line_strip.pose.orientation.w = 1.0;
+
+    line_strip.id = 1;
+    line_strip.type = visualization_msgs::Marker::LINE_LIST;
+
+    line_strip.scale.x = 0.005;
+    line_strip.color.r = 1.0;
+    line_strip.color.a = 1.0;
+    for (const auto& [index, cloud] : input) {
+        for(int i = 0 ; i < cloud->size() ; i++){
+            const auto& pnt_1 = cloud->points[i];
+            geometry_msgs::Point p1;
+            p1.x = pnt_1.x; p1.y = pnt_1.y; p1.z = pnt_1.z;
+            geometry_msgs::Point p2;
+            p2.x = p1.x+pnt_1.normal_x*0.1;
+            p2.y = p1.y+pnt_1.normal_y*0.1;
+            p2.z = p1.z+pnt_1.normal_z*0.1;
+            line_strip.points.push_back(p1);
+            line_strip.points.push_back(p2);
+        }
+    }
+    line_strip.header.stamp = ros::Time::now();
+    pub.publish(line_strip);
+}
 
 }

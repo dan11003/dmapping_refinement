@@ -23,6 +23,8 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
         const Eigen::Isometry3d Tdiff = graph_->nodes[idx].T.inverse()*graph_->nodes[nextIdx].T;
         graph_->AddConstraint(Tdiff, idx, nextIdx);
     }
+    pub = nh_.advertise<visualization_msgs::Marker>("/submap_normals",100);
+    pubDownsampled = nh_.advertise<visualization_msgs::Marker>("/submap_normals_downsampled",100);
 
     // Filter point clouds
     //for (auto itr = surf_.begin() ; itr != surf_.end() ; itr++){
@@ -179,6 +181,26 @@ void Fuser::RunDebugger(){
             cout << "Coarse registration" << endl;
             NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
             reg.Solve(parameters, submapLock);
+
+            std::map<int,NormalCloud::Ptr> output;
+            NormalCloud::Ptr mergedPrev(new NormalCloud());
+            NormalCloud::Ptr mergedDownsampled(new NormalCloud());
+            reg.GetPointCloudsSurfTransformed(output);
+            for(auto & [index,cloud] : output){
+                *mergedPrev += *cloud;
+            }
+            PublishCloud("/refined_scans", *mergedPrev, "world", ros::Time::now(), nh_);
+            PublishCloud("/refined_scans", *mergedPrev, "world", ros::Time::now(), nh_);
+            /*pcl::VoxelGrid<pcl::PointXYZINormal> sor;
+            sor.setMinimumPointsNumberPerVoxel(2);
+            sor.setInputCloud(mergedPrev);
+            sor.setLeafSize (0.05, 0.05, 0.05);
+            sor.filter (*mergedDownsampled);*/
+            std::map<int,NormalCloud::Ptr> submap = {{0,mergedPrev}};
+            std::map<int,NormalCloud::Ptr> submapDownsampled = {{0,mergedDownsampled}};
+
+            VisualizePointCloudNormal(submap, "submapRaw", pub);
+            VisualizePointCloudNormal(submapDownsampled, "submapDownsampled", pubDownsampled);
             /*NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
             cout << "Fine registration" << endl;
             reg.Solve(parameters, submapLock);*/

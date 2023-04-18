@@ -82,6 +82,8 @@ class lineRefinement{
     const pcl::PointCloud<PointType>::Ptr input_;
 };
 
+void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name, ros::Publisher& pub);
+
 /*class RotErrorTerm {
  public:
   RotErrorTerm(Eigen::Quaterniond q_a_measured,

@@ -56,6 +56,7 @@ public:
   std::map<int,std::vector<double>> stamps_;
   std::map<int,Eigen::Quaterniond> imu_;
   ros::NodeHandle& nh_;
+  ros::Publisher pub, pubDownsampled;
 
 
   // Methods

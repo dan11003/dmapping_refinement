@@ -45,6 +45,8 @@ public:
 
   void Solve(std::map<int,Pose3d>& solution, const std::map<int,bool>& locked);
 
+  void GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Ptr>& output);
+
   //ceres::Problem problem;
   ceres::Problem::Options problem_options;
   ceres::Solver::Summary summary;
@@ -65,8 +67,6 @@ private:
   void Visualize(const std::string& topic);
 
   void VisualizeCorrespondance(std::vector<Correspondance>& corr);
-
-  void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name);
 
   int nr_residual = 0;
 
@@ -99,7 +99,7 @@ private:
   ros::Publisher vis_pub, normal_pub;
 };
 
-
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const std::vector<double>& stamps, const NormalCloud::Ptr& input, NormalCloud::Ptr& output);
 
 }
 

@@ -154,30 +154,35 @@ std::vector<Correspondance> NScanRefinement::FindCorrespondences(const int scan_
     //cout <<"tot: " << cloud_i->size() << ", found: " << found << ", accept: " << accept << endl;
     return correspondances;
 }
+void NScanRefinement::GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Ptr>& output){
+    TransformCommonFrame(surf_, output, false);
+}
+
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const std::vector<double>& stamps, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
+    const Eigen::Vector3d& t = pose.p;
+    const Eigen::Quaterniond& q = pose.q;
+    for(size_t i = 0 ; i < input->size() ; i++){
+        const double time = stamps[i];
+        const auto pnt = (input->points[i]);
+        const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
+        const Eigen::Vector3d v_comp = vel.p*time;
+        const Eigen::Vector3d p_transformed = q*(p+v_comp) + t; // rigid transform
+        const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
+        const Eigen::Vector3d normal_transformed = q*normal;
+        output->push_back(EigToPnt(p_transformed, normal_transformed, input->points[i].intensity));
+    }
+}
 void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree){
-    const auto& input_set(input);
+    const std::map<int,NormalCloud::Ptr>& input_set(input);
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        const auto h_transformed = NormalCloud().makeShared();
-        const auto& h_vel = velocities_.at(idx);
-        const auto& h_time = stamps_.at(idx);
-        const auto& h_points = input_set.at(idx);
-        const Eigen::Vector3d& t = poses_.at(idx).p;
-        const Eigen::Quaterniond& q = poses_.at(idx).q;
-
-        for(size_t i = 0 ; i < h_points->size() ; i++){
-            const double time = h_time[i];
-            const auto pnt = (h_points->points[i]);
-            const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
-            const Eigen::Vector3d v_comp = h_vel.p*time;
-            const Eigen::Vector3d p_transformed = q*(p+v_comp) + t; // rigid transform
-            const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
-            const Eigen::Vector3d normal_transformed = q*normal;
-            h_transformed->push_back(EigToPnt(p_transformed, normal_transformed, h_points->points[i].intensity));
-            //if(i%100==0)
-            //    cout << p_transformed.transpose() << ", " << normal_transformed.transpose() << endl;
-        }
-        output[idx] = h_transformed;
+        NormalCloud::Ptr transformed = NormalCloud().makeShared();
+        const Pose3d& vel = velocities_.at(idx);
+        const Pose3d& pose = poses_.at(idx);
+        const std::vector<double>& stamp = stamps_.at(idx);
+        const NormalCloud::Ptr& input = input_set.at(idx);
+        NonRigidTransform(vel, pose, stamp, input, transformed);
+        output[idx] = transformed;
         if(compute_kdtree){
             kdtree_[idx] = pcl::KdTreeFLANN<pcl::PointXYZINormal>().makeShared();
             kdtree_[idx]->setInputCloud(transformed_[idx]);
@@ -247,35 +252,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
             poses_[c.target_scan].p.data());
 */
 }
-void NScanRefinement::VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std::string& name){
-    visualization_msgs::Marker line_strip;
-    line_strip.header.frame_id = "world";
-    line_strip.ns = name;
-    line_strip.action = visualization_msgs::Marker::ADD;
-    line_strip.pose.orientation.w = 1.0;
 
-    line_strip.id = 1;
-    line_strip.type = visualization_msgs::Marker::LINE_LIST;
-
-    line_strip.scale.x = 0.005;
-    line_strip.color.r = 1.0;
-    line_strip.color.a = 1.0;
-    for (const auto& [index, cloud] : input) {
-        for(int i = 0 ; i < cloud->size() ; i++){
-            const auto& pnt_1 = cloud->points[i];
-            geometry_msgs::Point p1;
-            p1.x = pnt_1.x; p1.y = pnt_1.y; p1.z = pnt_1.z;
-            geometry_msgs::Point p2;
-            p2.x = p1.x+pnt_1.normal_x*0.1;
-            p2.y = p1.y+pnt_1.normal_y*0.1;
-            p2.z = p1.z+pnt_1.normal_z*0.1;
-            line_strip.points.push_back(p1);
-            line_strip.points.push_back(p2);
-        }
-    }
-    line_strip.header.stamp = ros::Time::now();
-    normal_pub.publish(line_strip);
-}
 
 void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr){
     visualization_msgs::Marker line_strip;
@@ -363,7 +340,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
         VisualizeCorrespondance(correspondances);
         std::map<int,NormalCloud::Ptr> raw_transformed;
         TransformCommonFrame(surf_, raw_transformed, true);
-        VisualizePointCloudNormal(raw_transformed, "normals");
+        VisualizePointCloudNormal(raw_transformed, "normals", normal_pub);
 
         for(auto && c : correspondances){
             addSurfCostFactor(c, problem);
@@ -389,6 +366,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solution){
                 if(locked_[idx]){
                     problem.SetParameterBlockConstant(pose_first_iter->second.p.data());
                     problem.SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
+                    problem.SetParameterBlockConstant(velocities_[idx].p.data());
                     //cout << "locked ";
                 }
                 else{

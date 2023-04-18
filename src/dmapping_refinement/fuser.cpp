@@ -211,6 +211,30 @@ void Fuser::RunDebugger(){
 }
 
 
+
+std::vector<std::map<int,bool>> Fuser::DivideSubmapNoOverlap(){
+    const int fullStep = par_.submap_size;
+    Eigen::Isometry3d prev = graph_->nodes.begin()->second.T;
+    std::vector<std::map<int,bool>> submaps;
+    int nr = 0;
+
+    for(auto itrStart = graph_->nodes.begin() ;  std::distance(graph_->nodes.begin(),itrStart) < graph_->nodes.size() ; std::advance(itrStart,fullStep) ){
+        std::map<int,NScanRefinement::Pose3d> parameters;
+        std::map<int,bool> submap;
+        cout  << "submap: ";
+
+        for(auto itr = itrStart
+            ; std::distance(graph_->nodes.begin(),itr) < graph_->nodes.size() && std::distance(itrStart,itr) < fullStep
+            ; std::advance(itr,1) )
+        {
+            submap[itr->first] = false;
+        }
+        submaps.push_back(submap);
+    }
+    return submaps;
+}
+
+
 std::vector<std::map<int,bool>> Fuser::DivideSubmap(){
     const int halfStep = par_.submap_size/2;
     const int fullStep = par_.submap_size;
@@ -244,6 +268,57 @@ std::vector<std::map<int,bool>> Fuser::DivideSubmap(){
     return submaps;
 }
 void Fuser::Run(){
+
+    ros::Time t0 = ros::Time::now();
+    cout << "submap partition" << endl;
+    std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
+    for (auto&& submap : submaps) {
+        std::map<int,NScanRefinement::Pose3d> parameters;
+
+        for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
+            const int currIdx = itr->first;
+            const bool lockParameter = itr->second;
+            //cout << currIdx <<", " << endl;
+
+            if(lockParameter){ // lock this parameter
+                //cout <<"lock: "<< currIdx <<", ";
+                parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
+            }
+            else{
+                //cout <<"unlock: "<< currIdx <<", ";
+                const int prevIdx = std::prev(itr)->first;
+                const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
+                const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
+                parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
+            }
+            //cout << "Get parameter: " << node.T.matrix() << endl;
+            if(!ros::ok())
+                break;
+        }
+        cout << endl;
+        NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+        reg.Solve(parameters, submap);
+        SetParameters(parameters);
+        double timeElapsed = (ros::Time::now() - t0).toSec();
+        cout << "Elapsed: " << timeElapsed << endl;
+        if(par_.max_time > 0 && timeElapsed > par_.max_time){
+            return;
+        }
+        /*NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
+        cout << "Fine grained" << endl;
+        reg.Solve(parameters, submap);
+        SetParameters(parameters);*/
+    }
+    cout << "Finish Fuser" << endl;
+    /*std::map<int,NScanRefinement::Pose3d> parameters;
+    GetParameters(parameters);
+    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+    reg.Solve(parameters);
+    //reg.Solve(parameters);
+    cout << "solved" << endl;
+    SetParameters(parameters);*/
+}
+void Fuser::RunSubmapFuser(){
 
     ros::Time t0 = ros::Time::now();
     cout << "submap partition" << endl;

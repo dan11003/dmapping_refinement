@@ -83,6 +83,8 @@ private:
    */
   std::vector<std::map<int,bool>> DivideSubmap();
 
+  std::vector<std::map<int,bool>> DivideSubmapNoOverlap();
+
 
 };
 

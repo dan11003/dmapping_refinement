@@ -117,7 +117,7 @@ public:
         if(run_debugger)
             fuser.RunDebugger();
         else
-            fuser.Run();
+            fuser.RunSubmapFuser();
         if(export_pcd){
             cout << "Save" << endl;
             fuser.Save(directory);

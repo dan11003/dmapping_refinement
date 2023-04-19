@@ -32,20 +32,27 @@ public:
     double  max_dist_association = 1;
     std::string loss = "cauchy";
     float resolution = 0.1;
+    bool estimate_velocity = true;
+
+    //std::string toString() {return}
   };
   struct Pose3d
   {
       Eigen::Vector3d p;
       Eigen::Quaterniond q;
+      const Pose3d Identity(){return {Eigen::Vector3d::Zero() , Eigen::Quaterniond::Identity()};}
   };
 
-  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,std::vector<double> >& stamps, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh);
 
-  void Solve(std::map<int,Pose3d>& solution);
+  NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh);
 
-  void Solve(std::map<int,Pose3d>& solution, const std::map<int,bool>& locked);
+  void Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel);
+
+  void Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel, const std::map<int,bool>& locked);
 
   void GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Ptr>& output);
+
+
 
   //ceres::Problem problem;
   ceres::Problem::Options problem_options;
@@ -74,7 +81,7 @@ private:
   Parameters par_;
   std::map<int,Pose3d> poses_;
   std::map<int,NormalCloud::Ptr> surf_;
-  std::map<int,std::vector<double> > stamps_;
+  //std::map<int,std::vector<double> > stamps_;
   std::map<int,Eigen::Quaterniond > imu_;
   ros::NodeHandle& nh_;
   std::map<int,Pose3d> velocities_;
@@ -99,7 +106,7 @@ private:
   ros::Publisher vis_pub, normal_pub;
 };
 
-void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const std::vector<double>& stamps, const NormalCloud::Ptr& input, NormalCloud::Ptr& output);
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output);
 
 }
 

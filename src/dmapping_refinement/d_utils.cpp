@@ -51,11 +51,10 @@ NormalCloud::Ptr TransformNonRigid(NormalCloud::Ptr cloud,
                                    const Eigen::Vector3d& t,
                                    const Eigen::Quaterniond& q,
                                    const Eigen::Vector3d& t_prim,
-                                   const Eigen::Quaterniond& q_prim,
-                                   const std::vector<double>& stamp){
+                                   const Eigen::Quaterniond& q_prim){
     NormalCloud::Ptr transformed(new NormalCloud());
     for(int i = 0 ; i < cloud->size() ; i++){
-        const double  time = stamp[i];
+        const double  time = cloud->points[i].curvature;
         const Eigen::Vector3d pnt = PntToEig(cloud->points[i]);
         const Eigen::Vector3d normal = NormalToEig(cloud->points[i]);
         const Eigen::Vector3d v_comp = t_prim*time;
@@ -75,7 +74,7 @@ NormalCloud::Ptr TransformNonRigid(NormalCloud::Ptr cloud,
 
         const Eigen::Vector3d p_transformed = q*pnt_comp + t; // rigid transform
         const Eigen::Vector3d n_transformed = q*normal_comp;// rigid transform
-        transformed->push_back(EigToPnt(p_transformed, n_transformed, cloud->points[i].intensity));
+        transformed->push_back(EigToPnt(p_transformed, n_transformed, cloud->points[i].intensity, cloud->points[i].curvature));
     }
     return transformed;
 }

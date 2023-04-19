@@ -5,8 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /PointCloud23
         - /TF1
+        - /PointCloud24
         - /PointCloud25/Autocompute Value Bounds1
         - /Marker2/Namespaces1
         - /debug1
@@ -14,7 +14,7 @@ Panels:
         - /debug1/Marker1
         - /debug1/Marker2
       Splitter Ratio: 0.4853801131248474
-    Tree Height: 1073
+    Tree Height: 250
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Views
@@ -126,512 +126,6 @@ Visualization Manager:
       Frame Timeout: 1.5e+08
       Frames:
         All Enabled: false
-        node_1:
-          Value: true
-        node_10:
-          Value: true
-        node_100:
-          Value: true
-        node_101:
-          Value: true
-        node_102:
-          Value: true
-        node_103:
-          Value: true
-        node_104:
-          Value: true
-        node_105:
-          Value: true
-        node_106:
-          Value: true
-        node_107:
-          Value: true
-        node_108:
-          Value: true
-        node_109:
-          Value: true
-        node_11:
-          Value: true
-        node_110:
-          Value: true
-        node_111:
-          Value: true
-        node_112:
-          Value: true
-        node_113:
-          Value: true
-        node_114:
-          Value: true
-        node_115:
-          Value: true
-        node_116:
-          Value: true
-        node_117:
-          Value: true
-        node_118:
-          Value: true
-        node_119:
-          Value: true
-        node_12:
-          Value: true
-        node_120:
-          Value: true
-        node_121:
-          Value: true
-        node_122:
-          Value: true
-        node_123:
-          Value: true
-        node_124:
-          Value: true
-        node_125:
-          Value: true
-        node_126:
-          Value: true
-        node_127:
-          Value: true
-        node_128:
-          Value: true
-        node_129:
-          Value: true
-        node_13:
-          Value: true
-        node_130:
-          Value: true
-        node_131:
-          Value: true
-        node_132:
-          Value: true
-        node_133:
-          Value: true
-        node_134:
-          Value: true
-        node_135:
-          Value: true
-        node_136:
-          Value: true
-        node_137:
-          Value: true
-        node_138:
-          Value: true
-        node_139:
-          Value: true
-        node_14:
-          Value: true
-        node_140:
-          Value: true
-        node_141:
-          Value: true
-        node_142:
-          Value: true
-        node_143:
-          Value: true
-        node_144:
-          Value: true
-        node_145:
-          Value: true
-        node_146:
-          Value: true
-        node_147:
-          Value: true
-        node_148:
-          Value: true
-        node_149:
-          Value: true
-        node_15:
-          Value: true
-        node_150:
-          Value: true
-        node_151:
-          Value: true
-        node_152:
-          Value: true
-        node_153:
-          Value: true
-        node_154:
-          Value: true
-        node_155:
-          Value: true
-        node_156:
-          Value: true
-        node_157:
-          Value: true
-        node_158:
-          Value: true
-        node_159:
-          Value: true
-        node_16:
-          Value: true
-        node_160:
-          Value: true
-        node_161:
-          Value: true
-        node_162:
-          Value: true
-        node_163:
-          Value: true
-        node_164:
-          Value: true
-        node_165:
-          Value: true
-        node_166:
-          Value: true
-        node_167:
-          Value: true
-        node_168:
-          Value: true
-        node_169:
-          Value: true
-        node_17:
-          Value: true
-        node_170:
-          Value: true
-        node_171:
-          Value: true
-        node_172:
-          Value: true
-        node_173:
-          Value: true
-        node_174:
-          Value: true
-        node_175:
-          Value: true
-        node_176:
-          Value: true
-        node_177:
-          Value: true
-        node_178:
-          Value: true
-        node_179:
-          Value: true
-        node_18:
-          Value: true
-        node_180:
-          Value: true
-        node_181:
-          Value: true
-        node_182:
-          Value: true
-        node_183:
-          Value: true
-        node_184:
-          Value: true
-        node_185:
-          Value: true
-        node_186:
-          Value: true
-        node_187:
-          Value: true
-        node_188:
-          Value: true
-        node_189:
-          Value: true
-        node_19:
-          Value: true
-        node_190:
-          Value: true
-        node_191:
-          Value: true
-        node_192:
-          Value: true
-        node_193:
-          Value: true
-        node_194:
-          Value: true
-        node_195:
-          Value: true
-        node_196:
-          Value: true
-        node_197:
-          Value: true
-        node_198:
-          Value: true
-        node_199:
-          Value: true
-        node_2:
-          Value: true
-        node_20:
-          Value: true
-        node_200:
-          Value: true
-        node_201:
-          Value: true
-        node_202:
-          Value: true
-        node_203:
-          Value: true
-        node_204:
-          Value: true
-        node_205:
-          Value: true
-        node_206:
-          Value: true
-        node_207:
-          Value: true
-        node_208:
-          Value: true
-        node_209:
-          Value: true
-        node_21:
-          Value: true
-        node_210:
-          Value: true
-        node_211:
-          Value: true
-        node_212:
-          Value: true
-        node_213:
-          Value: true
-        node_214:
-          Value: true
-        node_215:
-          Value: true
-        node_216:
-          Value: true
-        node_217:
-          Value: true
-        node_218:
-          Value: true
-        node_219:
-          Value: true
-        node_22:
-          Value: true
-        node_220:
-          Value: true
-        node_221:
-          Value: true
-        node_222:
-          Value: true
-        node_223:
-          Value: true
-        node_224:
-          Value: true
-        node_225:
-          Value: true
-        node_226:
-          Value: true
-        node_227:
-          Value: true
-        node_228:
-          Value: true
-        node_229:
-          Value: true
-        node_23:
-          Value: true
-        node_230:
-          Value: true
-        node_231:
-          Value: true
-        node_232:
-          Value: true
-        node_233:
-          Value: true
-        node_234:
-          Value: true
-        node_235:
-          Value: true
-        node_236:
-          Value: true
-        node_237:
-          Value: true
-        node_238:
-          Value: true
-        node_239:
-          Value: true
-        node_24:
-          Value: true
-        node_240:
-          Value: true
-        node_241:
-          Value: true
-        node_242:
-          Value: true
-        node_243:
-          Value: true
-        node_244:
-          Value: true
-        node_245:
-          Value: true
-        node_246:
-          Value: true
-        node_247:
-          Value: true
-        node_248:
-          Value: true
-        node_249:
-          Value: true
-        node_25:
-          Value: true
-        node_250:
-          Value: true
-        node_251:
-          Value: true
-        node_252:
-          Value: true
-        node_253:
-          Value: true
-        node_26:
-          Value: true
-        node_27:
-          Value: true
-        node_28:
-          Value: true
-        node_29:
-          Value: true
-        node_3:
-          Value: true
-        node_30:
-          Value: true
-        node_31:
-          Value: true
-        node_32:
-          Value: true
-        node_33:
-          Value: true
-        node_34:
-          Value: true
-        node_35:
-          Value: true
-        node_36:
-          Value: true
-        node_37:
-          Value: true
-        node_38:
-          Value: true
-        node_39:
-          Value: true
-        node_4:
-          Value: true
-        node_40:
-          Value: true
-        node_41:
-          Value: true
-        node_42:
-          Value: true
-        node_43:
-          Value: true
-        node_44:
-          Value: true
-        node_45:
-          Value: true
-        node_46:
-          Value: true
-        node_47:
-          Value: true
-        node_48:
-          Value: true
-        node_49:
-          Value: true
-        node_5:
-          Value: true
-        node_50:
-          Value: true
-        node_51:
-          Value: true
-        node_52:
-          Value: true
-        node_53:
-          Value: true
-        node_54:
-          Value: true
-        node_55:
-          Value: true
-        node_56:
-          Value: true
-        node_57:
-          Value: true
-        node_58:
-          Value: true
-        node_59:
-          Value: true
-        node_6:
-          Value: true
-        node_60:
-          Value: true
-        node_61:
-          Value: true
-        node_62:
-          Value: true
-        node_63:
-          Value: true
-        node_64:
-          Value: true
-        node_65:
-          Value: true
-        node_66:
-          Value: true
-        node_67:
-          Value: true
-        node_68:
-          Value: true
-        node_69:
-          Value: true
-        node_7:
-          Value: true
-        node_70:
-          Value: true
-        node_71:
-          Value: true
-        node_72:
-          Value: true
-        node_73:
-          Value: true
-        node_74:
-          Value: true
-        node_75:
-          Value: true
-        node_76:
-          Value: true
-        node_77:
-          Value: true
-        node_78:
-          Value: true
-        node_79:
-          Value: true
-        node_8:
-          Value: true
-        node_80:
-          Value: true
-        node_81:
-          Value: true
-        node_82:
-          Value: true
-        node_83:
-          Value: true
-        node_84:
-          Value: true
-        node_85:
-          Value: true
-        node_86:
-          Value: true
-        node_87:
-          Value: true
-        node_88:
-          Value: true
-        node_89:
-          Value: true
-        node_9:
-          Value: true
-        node_90:
-          Value: true
-        node_91:
-          Value: true
-        node_92:
-          Value: true
-        node_93:
-          Value: true
-        node_94:
-          Value: true
-        node_95:
-          Value: true
-        node_96:
-          Value: true
-        node_97:
-          Value: true
-        node_98:
-          Value: true
-        node_99:
-          Value: true
         reg_node_1:
           Value: true
         reg_node_10:
@@ -644,11 +138,63 @@ Visualization Manager:
           Value: true
         reg_node_14:
           Value: true
+        reg_node_15:
+          Value: true
+        reg_node_16:
+          Value: true
+        reg_node_17:
+          Value: true
+        reg_node_18:
+          Value: true
+        reg_node_19:
+          Value: true
         reg_node_2:
+          Value: true
+        reg_node_20:
+          Value: true
+        reg_node_21:
+          Value: true
+        reg_node_22:
+          Value: true
+        reg_node_23:
+          Value: true
+        reg_node_24:
+          Value: true
+        reg_node_25:
+          Value: true
+        reg_node_26:
+          Value: true
+        reg_node_27:
+          Value: true
+        reg_node_28:
+          Value: true
+        reg_node_29:
           Value: true
         reg_node_3:
           Value: true
+        reg_node_30:
+          Value: true
+        reg_node_31:
+          Value: true
+        reg_node_32:
+          Value: true
+        reg_node_33:
+          Value: true
+        reg_node_34:
+          Value: true
+        reg_node_35:
+          Value: true
+        reg_node_36:
+          Value: true
+        reg_node_37:
+          Value: true
+        reg_node_38:
+          Value: true
+        reg_node_39:
+          Value: true
         reg_node_4:
+          Value: true
+        reg_node_40:
           Value: true
         reg_node_5:
           Value: true
@@ -670,512 +216,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          node_1:
-            {}
-          node_10:
-            {}
-          node_100:
-            {}
-          node_101:
-            {}
-          node_102:
-            {}
-          node_103:
-            {}
-          node_104:
-            {}
-          node_105:
-            {}
-          node_106:
-            {}
-          node_107:
-            {}
-          node_108:
-            {}
-          node_109:
-            {}
-          node_11:
-            {}
-          node_110:
-            {}
-          node_111:
-            {}
-          node_112:
-            {}
-          node_113:
-            {}
-          node_114:
-            {}
-          node_115:
-            {}
-          node_116:
-            {}
-          node_117:
-            {}
-          node_118:
-            {}
-          node_119:
-            {}
-          node_12:
-            {}
-          node_120:
-            {}
-          node_121:
-            {}
-          node_122:
-            {}
-          node_123:
-            {}
-          node_124:
-            {}
-          node_125:
-            {}
-          node_126:
-            {}
-          node_127:
-            {}
-          node_128:
-            {}
-          node_129:
-            {}
-          node_13:
-            {}
-          node_130:
-            {}
-          node_131:
-            {}
-          node_132:
-            {}
-          node_133:
-            {}
-          node_134:
-            {}
-          node_135:
-            {}
-          node_136:
-            {}
-          node_137:
-            {}
-          node_138:
-            {}
-          node_139:
-            {}
-          node_14:
-            {}
-          node_140:
-            {}
-          node_141:
-            {}
-          node_142:
-            {}
-          node_143:
-            {}
-          node_144:
-            {}
-          node_145:
-            {}
-          node_146:
-            {}
-          node_147:
-            {}
-          node_148:
-            {}
-          node_149:
-            {}
-          node_15:
-            {}
-          node_150:
-            {}
-          node_151:
-            {}
-          node_152:
-            {}
-          node_153:
-            {}
-          node_154:
-            {}
-          node_155:
-            {}
-          node_156:
-            {}
-          node_157:
-            {}
-          node_158:
-            {}
-          node_159:
-            {}
-          node_16:
-            {}
-          node_160:
-            {}
-          node_161:
-            {}
-          node_162:
-            {}
-          node_163:
-            {}
-          node_164:
-            {}
-          node_165:
-            {}
-          node_166:
-            {}
-          node_167:
-            {}
-          node_168:
-            {}
-          node_169:
-            {}
-          node_17:
-            {}
-          node_170:
-            {}
-          node_171:
-            {}
-          node_172:
-            {}
-          node_173:
-            {}
-          node_174:
-            {}
-          node_175:
-            {}
-          node_176:
-            {}
-          node_177:
-            {}
-          node_178:
-            {}
-          node_179:
-            {}
-          node_18:
-            {}
-          node_180:
-            {}
-          node_181:
-            {}
-          node_182:
-            {}
-          node_183:
-            {}
-          node_184:
-            {}
-          node_185:
-            {}
-          node_186:
-            {}
-          node_187:
-            {}
-          node_188:
-            {}
-          node_189:
-            {}
-          node_19:
-            {}
-          node_190:
-            {}
-          node_191:
-            {}
-          node_192:
-            {}
-          node_193:
-            {}
-          node_194:
-            {}
-          node_195:
-            {}
-          node_196:
-            {}
-          node_197:
-            {}
-          node_198:
-            {}
-          node_199:
-            {}
-          node_2:
-            {}
-          node_20:
-            {}
-          node_200:
-            {}
-          node_201:
-            {}
-          node_202:
-            {}
-          node_203:
-            {}
-          node_204:
-            {}
-          node_205:
-            {}
-          node_206:
-            {}
-          node_207:
-            {}
-          node_208:
-            {}
-          node_209:
-            {}
-          node_21:
-            {}
-          node_210:
-            {}
-          node_211:
-            {}
-          node_212:
-            {}
-          node_213:
-            {}
-          node_214:
-            {}
-          node_215:
-            {}
-          node_216:
-            {}
-          node_217:
-            {}
-          node_218:
-            {}
-          node_219:
-            {}
-          node_22:
-            {}
-          node_220:
-            {}
-          node_221:
-            {}
-          node_222:
-            {}
-          node_223:
-            {}
-          node_224:
-            {}
-          node_225:
-            {}
-          node_226:
-            {}
-          node_227:
-            {}
-          node_228:
-            {}
-          node_229:
-            {}
-          node_23:
-            {}
-          node_230:
-            {}
-          node_231:
-            {}
-          node_232:
-            {}
-          node_233:
-            {}
-          node_234:
-            {}
-          node_235:
-            {}
-          node_236:
-            {}
-          node_237:
-            {}
-          node_238:
-            {}
-          node_239:
-            {}
-          node_24:
-            {}
-          node_240:
-            {}
-          node_241:
-            {}
-          node_242:
-            {}
-          node_243:
-            {}
-          node_244:
-            {}
-          node_245:
-            {}
-          node_246:
-            {}
-          node_247:
-            {}
-          node_248:
-            {}
-          node_249:
-            {}
-          node_25:
-            {}
-          node_250:
-            {}
-          node_251:
-            {}
-          node_252:
-            {}
-          node_253:
-            {}
-          node_26:
-            {}
-          node_27:
-            {}
-          node_28:
-            {}
-          node_29:
-            {}
-          node_3:
-            {}
-          node_30:
-            {}
-          node_31:
-            {}
-          node_32:
-            {}
-          node_33:
-            {}
-          node_34:
-            {}
-          node_35:
-            {}
-          node_36:
-            {}
-          node_37:
-            {}
-          node_38:
-            {}
-          node_39:
-            {}
-          node_4:
-            {}
-          node_40:
-            {}
-          node_41:
-            {}
-          node_42:
-            {}
-          node_43:
-            {}
-          node_44:
-            {}
-          node_45:
-            {}
-          node_46:
-            {}
-          node_47:
-            {}
-          node_48:
-            {}
-          node_49:
-            {}
-          node_5:
-            {}
-          node_50:
-            {}
-          node_51:
-            {}
-          node_52:
-            {}
-          node_53:
-            {}
-          node_54:
-            {}
-          node_55:
-            {}
-          node_56:
-            {}
-          node_57:
-            {}
-          node_58:
-            {}
-          node_59:
-            {}
-          node_6:
-            {}
-          node_60:
-            {}
-          node_61:
-            {}
-          node_62:
-            {}
-          node_63:
-            {}
-          node_64:
-            {}
-          node_65:
-            {}
-          node_66:
-            {}
-          node_67:
-            {}
-          node_68:
-            {}
-          node_69:
-            {}
-          node_7:
-            {}
-          node_70:
-            {}
-          node_71:
-            {}
-          node_72:
-            {}
-          node_73:
-            {}
-          node_74:
-            {}
-          node_75:
-            {}
-          node_76:
-            {}
-          node_77:
-            {}
-          node_78:
-            {}
-          node_79:
-            {}
-          node_8:
-            {}
-          node_80:
-            {}
-          node_81:
-            {}
-          node_82:
-            {}
-          node_83:
-            {}
-          node_84:
-            {}
-          node_85:
-            {}
-          node_86:
-            {}
-          node_87:
-            {}
-          node_88:
-            {}
-          node_89:
-            {}
-          node_9:
-            {}
-          node_90:
-            {}
-          node_91:
-            {}
-          node_92:
-            {}
-          node_93:
-            {}
-          node_94:
-            {}
-          node_95:
-            {}
-          node_96:
-            {}
-          node_97:
-            {}
-          node_98:
-            {}
-          node_99:
-            {}
           reg_node_1:
             {}
           reg_node_10:
@@ -1188,11 +228,63 @@ Visualization Manager:
             {}
           reg_node_14:
             {}
+          reg_node_15:
+            {}
+          reg_node_16:
+            {}
+          reg_node_17:
+            {}
+          reg_node_18:
+            {}
+          reg_node_19:
+            {}
           reg_node_2:
+            {}
+          reg_node_20:
+            {}
+          reg_node_21:
+            {}
+          reg_node_22:
+            {}
+          reg_node_23:
+            {}
+          reg_node_24:
+            {}
+          reg_node_25:
+            {}
+          reg_node_26:
+            {}
+          reg_node_27:
+            {}
+          reg_node_28:
+            {}
+          reg_node_29:
             {}
           reg_node_3:
             {}
+          reg_node_30:
+            {}
+          reg_node_31:
+            {}
+          reg_node_32:
+            {}
+          reg_node_33:
+            {}
+          reg_node_34:
+            {}
+          reg_node_35:
+            {}
+          reg_node_36:
+            {}
+          reg_node_37:
+            {}
+          reg_node_38:
+            {}
+          reg_node_39:
+            {}
           reg_node_4:
+            {}
+          reg_node_40:
             {}
           reg_node_5:
             {}
@@ -1236,7 +328,7 @@ Visualization Manager:
       Color: 0; 0; 0
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 0; 0; 0
       Max Intensity: 120
@@ -1253,7 +345,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 0.5
       Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
@@ -1571,7 +663,7 @@ Visualization Manager:
           Marker Topic: /submap_normals_downsampled
           Name: Marker
           Namespaces:
-            submapDownsampled: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -1592,7 +684,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 0.7412651777267456
+      Distance: 2.930619478225708
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -1600,31 +692,31 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -2.972999334335327
-        Y: 2.0352554321289062
-        Z: -8.642673492431641e-07
+        X: 2.91788911819458
+        Y: 0.4388499855995178
+        Z: -2.4139881134033203e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7648013830184937
+      Pitch: 0.4247976541519165
       Target Frame: <Fixed Frame>
-      Yaw: 1.8589744567871094
+      Yaw: 0.7716382741928101
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1376
+  Height: 1440
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001c10000052dfc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000000a0049006d006100670065000000002e000001340000000000000000fb000000100044006900730070006c00610079007301000000160000052d000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000286000000a70000005c00ffffff000000010000011100000506fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000506000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b000000040fc0100000002fb0000000800540069006d00650000000000000004b00000000000000000fb0000000800540069006d00650100000000000004500000000000000000000007f10000052d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001c10000052dfc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000000a0049006d006100670065000000002e000001340000000000000000fb000000100044006900730070006c00610079007300000000160000052d000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000286000000a70000005c00ffffff000000010000011100000506fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000506000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004b000000040fc0100000002fb0000000800540069006d00650000000000000004b00000000000000000fb0000000800540069006d0065010000000000000450000000000000000000000a00000005a000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Tool Properties:
     collapsed: false
   Views:
     collapsed: false
-  Width: 2488
-  X: 72
-  Y: 27
+  Width: 2560
+  X: 0
+  Y: 0

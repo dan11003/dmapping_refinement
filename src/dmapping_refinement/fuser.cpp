@@ -13,7 +13,6 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     }
     for (auto& [index, surfel]: graph_->surfels_){
         surf_[index] = surfel.GetPointCloud();
-        stamps_[index] = surfel.GetPointCloudTime();
         imu_[index] = graph_->nodes[index].imu;
     }
     // Set constraints
@@ -69,24 +68,25 @@ void Fuser::Visualize(){
     std::vector<tf::StampedTransform> trans_vek;
     pcl::PointCloud<PointType>::Ptr merged_edge(new pcl::PointCloud<PointType>());
     pcl::PointCloud<PointType>::Ptr merged_less_edge(new pcl::PointCloud<PointType>());
-    pcl::PointCloud<PointType>::Ptr merged_surf(new pcl::PointCloud<PointType>());
+    NormalCloud::Ptr merged_surf = NormalCloud().makeShared();
     ros::Time t = ros::Time::now();
     for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end() ; itr++){
-        pcl::PointCloud<PointType> tmp_surf, tmp_edge, tmp_less_edge;
-        pcl::transformPointCloud(*itr->second.segmented_scans[0], tmp_surf, itr->second.T.matrix());
-        pcl::transformPointCloud(*itr->second.segmented_scans[1], tmp_edge, itr->second.T.matrix());
-        pcl::transformPointCloud(*itr->second.segmented_scans[2], tmp_less_edge, itr->second.T.matrix());
+        //pcl::PointCloud<PointType> tmp_surf, tmp_edge, tmp_less_edge;
+        NormalCloud tmp_surf;
+        pcl::transformPointCloud(*surf_[itr->first], tmp_surf, itr->second.T.matrix()); // not good
+        //pcl::transformPointCloud(*itr->second.segmented_scans[1], tmp_edge, itr->second.T.matrix());
+        //pcl::transformPointCloud(*itr->second.segmented_scans[2], tmp_less_edge, itr->second.T.matrix());
         *merged_surf += tmp_surf;
-        *merged_edge +=  tmp_edge;
-        *merged_less_edge +=  tmp_less_edge;
+        //*merged_edge +=  tmp_edge;
+        //*merged_less_edge +=  tmp_less_edge;
         tf::Transform Tf;
         tf::transformEigenToTF(itr->second.T, Tf);
         trans_vek.push_back(tf::StampedTransform(Tf, t, "world", "node_"+std::to_string(itr->first)));
     }
     Tbr.sendTransform(trans_vek);
     PublishCloud("/surf", *merged_surf, "world", t, nh_);
-    PublishCloud("/edge", *merged_edge, "world", t,nh_);
-    PublishCloud("/less_edge", *merged_less_edge, "world", t, nh_);
+    //PublishCloud("/edge", *merged_edge, "world", t,nh_);
+    //PublishCloud("/less_edge", *merged_less_edge, "world", t, nh_);
     cout << "Publish size: " << merged_surf->size() + merged_edge->size() + merged_less_edge->size() << endl;
     NormalCloud::Ptr merged_0(new NormalCloud());
     NormalCloud::Ptr merged_1(new NormalCloud());
@@ -174,13 +174,13 @@ void Fuser::RunDebugger(){
             for(auto itr = itrFirst ;  std::distance(itrFirst,itr)  < graph_->nodes.size() && std::distance(itrFirst,itr) < par_.submap_size ; itr++ ){
                 submapLock[itr->first] = (itr == itrFirst); // first true else false
             }
-            std::map<int,NScanRefinement::Pose3d> parameters;
+            std::map<int,NScanRefinement::Pose3d> posePar, velPar;
             for(auto && [index,lock] : submapLock){
-                parameters[index] = ToPose3d(graph_->nodes[index].T);
+                posePar[index] = ToPose3d(graph_->nodes[index].T);
             }
             cout << "Coarse registration" << endl;
-            NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
-            reg.Solve(parameters, submapLock);
+            NScanRefinement reg(par_.reg_par, posePar, surf_, imu_, nh_);
+            reg.Solve(posePar, velPar, submapLock);
 
             std::map<int,NormalCloud::Ptr> output;
             NormalCloud::Ptr mergedPrev(new NormalCloud());
@@ -214,24 +214,19 @@ void Fuser::RunDebugger(){
 
 std::vector<std::map<int,bool>> Fuser::DivideSubmapNoOverlap(){
     const int fullStep = par_.submap_size;
-    Eigen::Isometry3d prev = graph_->nodes.begin()->second.T;
-    std::vector<std::map<int,bool>> submaps;
-    int nr = 0;
-
-    for(auto itrStart = graph_->nodes.begin() ;  std::distance(graph_->nodes.begin(),itrStart) < graph_->nodes.size() ; std::advance(itrStart,fullStep) ){
-        std::map<int,NScanRefinement::Pose3d> parameters;
-        std::map<int,bool> submap;
-        cout  << "submap: ";
-
-        for(auto itr = itrStart
-            ; std::distance(graph_->nodes.begin(),itr) < graph_->nodes.size() && std::distance(itrStart,itr) < fullStep
-            ; std::advance(itr,1) )
-        {
-            submap[itr->first] = false;
-        }
-        submaps.push_back(submap);
-    }
-    return submaps;
+    std::vector<std::map<int,bool> > submaps; // to hold the indices of the sub-vector
+    auto it = graph_->nodes.begin();
+      while (it != graph_->nodes.end()) {
+          std::map<int,bool> subVector; // to hold the indices of the sub-vector
+          for (int i = 0; i < fullStep && it != graph_->nodes.end(); ++i, ++it) {
+              if(it == graph_->nodes.begin())
+                subVector[it->first] = true;
+              else
+                  subVector[it->first] = false;
+          }
+          submaps.push_back(subVector);
+      }
+      return submaps;
 }
 
 
@@ -271,9 +266,9 @@ void Fuser::Run(){
 
     ros::Time t0 = ros::Time::now();
     cout << "submap partition" << endl;
-    std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
+    std::vector<std::map<int,bool>> submaps = DivideSubmap();
     for (auto&& submap : submaps) {
-        std::map<int,NScanRefinement::Pose3d> parameters;
+        std::map<int,NScanRefinement::Pose3d> posePar, velPar;
 
         for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
             const int currIdx = itr->first;
@@ -282,23 +277,23 @@ void Fuser::Run(){
 
             if(lockParameter){ // lock this parameter
                 //cout <<"lock: "<< currIdx <<", ";
-                parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
+                posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
             }
             else{
                 //cout <<"unlock: "<< currIdx <<", ";
                 const int prevIdx = std::prev(itr)->first;
-                const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
+                const Eigen::Isometry3d prev = ToIsometry3d(posePar[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
-                parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
+                posePar[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
             }
             //cout << "Get parameter: " << node.T.matrix() << endl;
             if(!ros::ok())
                 break;
         }
         cout << endl;
-        NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
-        reg.Solve(parameters, submap);
-        SetParameters(parameters);
+        NScanRefinement reg(par_.reg_par, posePar, surf_, imu_, nh_);
+        reg.Solve(posePar, velPar, submap);
+        SetParameters(posePar);
         double timeElapsed = (ros::Time::now() - t0).toSec();
         cout << "Elapsed: " << timeElapsed << endl;
         if(par_.max_time > 0 && timeElapsed > par_.max_time){
@@ -312,7 +307,7 @@ void Fuser::Run(){
     cout << "Finish Fuser" << endl;
     /*std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters);
-    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
+    NScanRefinement reg(par_.reg_par, parameters, surf_, imu_, nh_);
     reg.Solve(parameters);
     //reg.Solve(parameters);
     cout << "solved" << endl;
@@ -321,55 +316,73 @@ void Fuser::Run(){
 void Fuser::RunSubmapFuser(){
 
     ros::Time t0 = ros::Time::now();
-    cout << "submap partition" << endl;
-    std::vector<std::map<int,bool>> submaps = DivideSubmap();
+
+
+    std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
     for (auto&& submap : submaps) {
-        std::map<int,NScanRefinement::Pose3d> parameters;
+        std::map<int,NScanRefinement::Pose3d> posePar, velPar;
+        if(!ros::ok())
+            return;
 
         for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
             const int currIdx = itr->first;
             const bool lockParameter = itr->second;
-            //cout << currIdx <<", " << endl;
-
+            cout << currIdx <<"-" << (int)lockParameter << " " << endl;
             if(lockParameter){ // lock this parameter
-                //cout <<"lock: "<< currIdx <<", ";
-                parameters[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
+                posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
             }
             else{
-                //cout <<"unlock: "<< currIdx <<", ";
                 const int prevIdx = std::prev(itr)->first;
-                const Eigen::Isometry3d prev = ToIsometry3d(parameters[prevIdx]);
+                const Eigen::Isometry3d prev = ToIsometry3d(posePar[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
-                parameters[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
+                posePar[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
             }
-            //cout << "Get parameter: " << node.T.matrix() << endl;
-            if(!ros::ok())
-                break;
         }
-        cout << endl;
-        NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
-        reg.Solve(parameters, submap);
-        SetParameters(parameters);
+        std::map<int,bool> submapWithKeyFrames = submap;
+        auto surfWithKeyFrame = surf_;
+        for(auto && keyframe : keyframesHistory){
+           surfWithKeyFrame[keyframe.idx] = keyframe.surf;
+           posePar[keyframe.idx] = ToPose3d(keyframe.pose);
+           submapWithKeyFrames[keyframe.idx]  = true;
+        }
+
+        NScanRefinement reg(par_.reg_par, posePar, surfWithKeyFrame, imu_, nh_);
+        reg.Solve(posePar, velPar, submapWithKeyFrames);
+
+
+        NormalCloud::Ptr aggregated = NormalCloud().makeShared();
+        const int idxLast = std::prev(submap.end())->first;
+        const Eigen::Isometry3d poseSubmapLast =  ToIsometry3d(posePar[idxLast]);
+        for(auto && [idx,lock] : submap){ // apply non-rigid transformation and concatinate scans into local frame
+            NonRigidTransform(velPar[idx], posePar[idx], surf_[idx], surf_[idx]); // replace surf with transformed
+            pcl::transformPointCloudWithNormals(*surf_[idx], *aggregated, (poseSubmapLast.inverse()*ToIsometry3d(posePar[idx])).matrix()); //Transform to local frame of SubmapLas
+            graph_->nodes[idx].T = ToIsometry3d(posePar[idx]);
+        }
+        for(auto && p : aggregated->points){
+            p.curvature = 0;
+        }
+        keyframesHistory.push_back(keyframes{poseSubmapLast, aggregated, -idxLast}); // make negative to avoid conflict - only submaps are negative
+        if(keyframesHistory.size() > par_.submap_history)
+            keyframesHistory.erase(keyframesHistory.begin());
+
+        /*
         double timeElapsed = (ros::Time::now() - t0).toSec();
         cout << "Elapsed: " << timeElapsed << endl;
         if(par_.max_time > 0 && timeElapsed > par_.max_time){
             return;
-        }
+        }*/
         /*NScanRefinement::Parameters parFineGrained = {2, 5, par_.reg_par.max_dist_association*0.5, "cauchy"};
         cout << "Fine grained" << endl;
         reg.Solve(parameters, submap);
         SetParameters(parameters);*/
     }
     cout << "Finish Fuser" << endl;
-    /*std::map<int,NScanRefinement::Pose3d> parameters;
-    GetParameters(parameters);
-    NScanRefinement reg(par_.reg_par, parameters, surf_, stamps_, imu_, nh_);
-    reg.Solve(parameters);
-    //reg.Solve(parameters);
-    cout << "solved" << endl;
-    SetParameters(parameters);*/
-}
 
+}
+void ApplyTransformation(std::map<int,NormalCloud::Ptr>, bool rigid, bool nonRigid, const std::map<int,bool>& locked){
+
+
+}
 void Fuser::GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters){
     parameters.clear();
     for (const auto& [index, node]: graph_->nodes) {

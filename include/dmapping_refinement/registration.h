@@ -40,7 +40,7 @@ public:
   {
       Eigen::Vector3d p;
       Eigen::Quaterniond q;
-      const Pose3d Identity(){return {Eigen::Vector3d::Zero() , Eigen::Quaterniond::Identity()};}
+      static const Pose3d Identity(){return {Eigen::Vector3d::Zero() , Eigen::Quaterniond::Identity()};}
   };
 
 

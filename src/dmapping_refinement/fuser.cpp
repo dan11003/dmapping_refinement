@@ -29,12 +29,12 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     //for (auto itr = surf_.begin() ; itr != surf_.end() ; itr++){
     //for (auto& [index, surf_cloud]: surf_){
     cout << "Normal refinement started" << endl;
-    #pragma omp parallel
+#pragma omp parallel
     {
-        #pragma omp single
+#pragma omp single
         {
             for (auto itr = surf_.begin() ; itr != surf_.end() ; itr++){
-                #pragma omp task
+#pragma omp task
                 {
                     //do something
 
@@ -52,7 +52,7 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
                     pcl::NormalRefinement<pcl::PointXYZINormal> refinement(k_indices, k_sqr_distances);
                     refinement.setInputCloud(surf_cloud);
                     refinement.filter(*filtered_normals);
-                    #pragma omp critical
+#pragma omp critical
                     {
                         surf_[index] = filtered_normals;
                     }
@@ -216,17 +216,17 @@ std::vector<std::map<int,bool>> Fuser::DivideSubmapNoOverlap(){
     const int fullStep = par_.submap_size;
     std::vector<std::map<int,bool> > submaps; // to hold the indices of the sub-vector
     auto it = graph_->nodes.begin();
-      while (it != graph_->nodes.end()) {
-          std::map<int,bool> subVector; // to hold the indices of the sub-vector
-          for (int i = 0; i < fullStep && it != graph_->nodes.end(); ++i, ++it) {
-              if(it == graph_->nodes.begin())
+    while (it != graph_->nodes.end()) {
+        std::map<int,bool> subVector; // to hold the indices of the sub-vector
+        for (int i = 0; i < fullStep && it != graph_->nodes.end(); ++i, ++it) {
+            if(it == graph_->nodes.begin())
                 subVector[it->first] = true;
-              else
-                  subVector[it->first] = false;
-          }
-          submaps.push_back(subVector);
-      }
-      return submaps;
+            else
+                subVector[it->first] = false;
+        }
+        submaps.push_back(subVector);
+    }
+    return submaps;
 }
 
 
@@ -317,33 +317,40 @@ void Fuser::RunSubmapFuser(){
 
     ros::Time t0 = ros::Time::now();
 
-
+    Eigen::Isometry3d poseScanLast;
+    int idxScanLast;
     std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
-    for (auto&& submap : submaps) {
+    for (auto submapItr = submaps.begin() ; submapItr != submaps.end() ; submapItr++ ) {
         std::map<int,NScanRefinement::Pose3d> posePar, velPar;
         if(!ros::ok())
             return;
 
-        for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
-            const int currIdx = itr->first;
-            const bool lockParameter = itr->second;
-            cout << currIdx <<"-" << (int)lockParameter << " " << endl;
-            if(lockParameter){ // lock this parameter
-                posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly!
+        cout << "Press to Start Next iteration" << endl;
+        char c = getchar();
+
+        for (auto scanItr = submapItr->begin() ; scanItr != submapItr->end() ; scanItr++) {
+            const int currIdx = scanItr->first;
+            if(submapItr == submaps.begin()){ // lock the very first node only
+                posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly from graph
             }
-            else{
-                const int prevIdx = std::prev(itr)->first;
+            else if(scanItr == submapItr->begin()){  // if first in the submap but not in first node,
+                const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(idxScanLast,currIdx)]; // we use odometry prediciton stored in the constraints...
+                posePar[currIdx] = ToPose3d(graph_->nodes[idxScanLast].T*inc); //... to predict the current pose
+            }
+            else{ //use the posePar vector as well as graph constraints
+                const int prevIdx = std::prev(scanItr)->first;
                 const Eigen::Isometry3d prev = ToIsometry3d(posePar[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
                 posePar[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
             }
         }
-        std::map<int,bool> submapWithKeyFrames = submap;
+        cout << "history: " << keyframesHistory.size() << endl;
+        std::map<int,bool> submapWithKeyFrames = *submapItr;
         auto surfWithKeyFrame = surf_;
         for(auto && keyframe : keyframesHistory){
-           surfWithKeyFrame[keyframe.idx] = keyframe.surf;
-           posePar[keyframe.idx] = ToPose3d(keyframe.pose);
-           submapWithKeyFrames[keyframe.idx]  = true;
+            surfWithKeyFrame[keyframe.idx] = keyframe.surf;
+            posePar[keyframe.idx] = ToPose3d(keyframe.pose);
+            submapWithKeyFrames[keyframe.idx]  = true;
         }
 
         NScanRefinement reg(par_.reg_par, posePar, surfWithKeyFrame, imu_, nh_);
@@ -351,17 +358,31 @@ void Fuser::RunSubmapFuser(){
 
 
         NormalCloud::Ptr aggregated = NormalCloud().makeShared();
-        const int idxLast = std::prev(submap.end())->first;
-        const Eigen::Isometry3d poseSubmapLast =  ToIsometry3d(posePar[idxLast]);
-        for(auto && [idx,lock] : submap){ // apply non-rigid transformation and concatinate scans into local frame
-            NonRigidTransform(velPar[idx], posePar[idx], surf_[idx], surf_[idx]); // replace surf with transformed
-            pcl::transformPointCloudWithNormals(*surf_[idx], *aggregated, (poseSubmapLast.inverse()*ToIsometry3d(posePar[idx])).matrix()); //Transform to local frame of SubmapLas
+        NormalCloud::Ptr aggregatedTransformed = NormalCloud().makeShared();
+        idxScanLast = std::prev(submapItr->end())->first;
+        poseScanLast =  ToIsometry3d(posePar[idxScanLast]);
+        for(auto && [idx,lock] : (*submapItr)){ // apply non-rigid transformation and concatinate scans into local frame, do only for scans, not previous keyframes
+            NonRigidTransform(velPar[idx], NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered
+            NormalCloud::Ptr tmp = NormalCloud().makeShared();
+            pcl::transformPointCloudWithNormals(*surf_[idx], *tmp, (poseScanLast.inverse()*ToIsometry3d(posePar[idx])).matrix()); //Transform to local frame of SubmapLas
+            *aggregated += *tmp;
             graph_->nodes[idx].T = ToIsometry3d(posePar[idx]);
+            //cout << "Set: " << idx <<", at: " << graph_->nodes[idx].T.translation().transpose() << endl;
         }
         for(auto && p : aggregated->points){
             p.curvature = 0;
         }
-        keyframesHistory.push_back(keyframes{poseSubmapLast, aggregated, -idxLast}); // make negative to avoid conflict - only submaps are negative
+        std::map<int,NormalCloud::Ptr> aggMap = {{-idxScanLast,aggregated}};
+
+        PublishCloud("/aggregatedTransformed", *aggregatedTransformed, "world", ros::Time::now(), nh_);
+        VisualizePointCloudNormal(aggMap, "aggregated", pub);
+
+        usleep(1000*1000);
+
+        PublishCloud("/aggregatedTransformed", *aggregatedTransformed, "world", ros::Time::now(), nh_);
+        VisualizePointCloudNormal(aggMap, "aggregated", pub);
+
+        keyframesHistory.push_back(keyframes{poseScanLast, aggregated, -idxScanLast}); // make negative to avoid conflict - only submaps are negative
         if(keyframesHistory.size() > par_.submap_history)
             keyframesHistory.erase(keyframesHistory.begin());
 

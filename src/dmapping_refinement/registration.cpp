@@ -98,7 +98,7 @@ std::vector<std::pair<int,int> > NScanRefinement::AssociateScanPairsLogN(){
         for(auto itr_to = std::next(itr_from) ; itr_to != poses_.end() ; itr_to++){
             //if(std::distance(itr_from,itr_to) % 2 ==0 || std::distance(itr_from,itr_to) == 1){ // 1 2 4 8 // optional - reduce from n^2 to log(n) where n is number of scans
             if( !(locked_[itr_from->first] && locked_[itr_to->first]) ){ // if not both locked
-                scan_pairs.push_back(std::make_pair(itr_from->first, itr_to->first));
+                scan_pairs.push_back(std::make_pair(itr_to->first, itr_from->first)); // first paramter is sooner in time, second paramter is later in time.
             }
         }
     }
@@ -175,12 +175,8 @@ void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement
         const Eigen::Vector3d normal_transformed = q*normal;
         tmp->push_back(EigToPnt(p_transformed, normal_transformed, input->points[i].intensity, input->points[i].curvature));
     }
-    if(output == input){
-        input->clear();
-        *output = *input;
-    }else{
-        output = tmp;
-    }
+    output->clear();
+    *output = *tmp;
 }
 void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>& input, std::map<int,NormalCloud::Ptr>& output, const bool compute_kdtree){
     const std::map<int,NormalCloud::Ptr>& input_set(input);
@@ -303,11 +299,21 @@ void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr)
 
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel, const std::map<int,bool>& locked){
     locked_ = locked;
+    cout << "before solver" << endl;
+    for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+        cout << itr->second.p.transpose() << " -- " << locked_[itr->first] << endl;
+    }
+
     Solve(solutionPose, solutionVel);
+    cout << "after solver" << endl;
+    for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+        cout << itr->second.p.transpose() << " -- " << locked_[itr->first] << endl;
+    }
 }
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
 
     if(locked_.size() != poses_.size()){
+        cout << "Unlock poses " << endl;
         locked_[poses_.begin()->first] = true; // lock first parameter block
         for(auto itr = std::next(poses_.begin()) ; itr != poses_.end() ; itr++)
             locked_[itr->first] = false; //unlock following parameter blocks
@@ -332,11 +338,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                 for (int i = 0 ; i < scan_pairs.size() ; i++) {
                     #pragma omp task
                     {
-                        const auto& pair = scan_pairs[i];
-                        const int scan_i = pair.first;
-                        const int scan_j = pair.second;
-
-                        std::vector<Correspondance> tmp_corr = FindCorrespondences(scan_i, scan_j);
+                        const std::vector<Correspondance> tmp_corr = FindCorrespondences(scan_pairs[i].first, scan_pairs[i].second);
                         //cout << "FindCorrespondences: " << scan_i << "," << scan_j <<", size: " << tmp_corr.size() << endl;
                         #pragma omp critical
                         {
@@ -373,16 +375,17 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                 const int idx = itr->first;
                 problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
                 if(locked_[idx]){
+                    //cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(pose_first_iter->second.p.data());
                     problem.SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
                     problem.SetParameterBlockConstant(velocities_[idx].p.data());
                     //cout << "locked ";
                 }
                 else{
-                    //cout << "unlocked ";
+                    if(!par_.estimate_velocity)
+                        problem.SetParameterBlockConstant(velocities_[idx].p.data());
                 }
-                if(!par_.estimate_velocity)
-                    problem.SetParameterBlockConstant(velocities_[idx].p.data());
+
             }
             cout << "Minimize" << endl;
             ceres::Solve(options, &problem, &summary);
@@ -395,6 +398,9 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     }
     solutionPose = poses_;
     solutionVel = velocities_;
+    /*for(auto itr = poses_.begin() ; itr != std::prev(poses_.end()); itr++){
+        cout << itr->first << " : " << itr->second.p.transpose() << endl;
+    }*/
 }
 
 }

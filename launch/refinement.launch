@@ -15,7 +15,7 @@
     <param name="estimate_velocity" type="bool" value="false" />
     <param name="directory_output" type="string" value="/home/daniel/Documents/cloud/" />
     <param name="export_pcd" type="bool" value="false" />
-    <param name="skip_frames" type="int" value="140" />
+    <param name="skip_frames" type="int" value="230" />
     <!--param name="max_time" type="int" value="100" /-->
 
     <param name="submap_size" type="double" value="2" /> <!-- adjusted to closest even number -->

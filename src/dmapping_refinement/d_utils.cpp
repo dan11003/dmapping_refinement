@@ -383,5 +383,13 @@ void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std:
     line_strip.header.stamp = ros::Time::now();
     pub.publish(line_strip);
 }
+Eigen::Isometry3d EigenCombine(const Eigen::AngleAxisd& q, const Eigen::Vector3d& transl){
+    Eigen::Matrix4d prediction = Eigen::Matrix4d::Zero();
+    Eigen::Matrix4d pred_mat;
+    pred_mat.setIdentity();
+    pred_mat.block<3,3>(0,0) = q.toRotationMatrix();
+    pred_mat.block<3,1>(0,3) = transl;
+    return Eigen::Isometry3d(pred_mat);
+}
 
 }

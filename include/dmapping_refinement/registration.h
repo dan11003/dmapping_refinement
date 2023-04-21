@@ -39,8 +39,8 @@ public:
   struct Pose3d
   {
       Eigen::Vector3d p;
-      Eigen::Quaterniond q;
-      static const Pose3d Identity(){return {Eigen::Vector3d::Zero() , Eigen::Quaterniond::Identity()};}
+      Eigen::AngleAxisd q;
+      static const Pose3d Identity(){return {Eigen::Vector3d::Zero() , Eigen::AngleAxisd::Identity()};}
   };
 
 
@@ -85,6 +85,7 @@ private:
   std::map<int,Eigen::Quaterniond > imu_;
   ros::NodeHandle& nh_;
   std::map<int,Pose3d> velocities_;
+  std::map<int,Eigen::AngleAxisd> angularvelocity_;
   std::map<int,bool> locked_;
 
   std::map<int,NormalCloud::Ptr> filtered_;
@@ -106,7 +107,7 @@ private:
   ros::Publisher vis_pub, normal_pub;
 };
 
-void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output);
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxisd rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output);
 
 }
 

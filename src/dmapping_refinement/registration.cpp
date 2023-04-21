@@ -17,6 +17,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
         const int idx = itr->first;
         velocities_[idx].p = Eigen::Vector3d(0,0,0);
         velocities_[idx].q = Eigen::Quaterniond::Identity();
+        angularvelocity_[idx] = Eigen::AngleAxisd::Identity();
     }
     // Filter
 
@@ -162,15 +163,20 @@ void NScanRefinement::GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Pt
     TransformCommonFrame(surf_, output, false);
 }
 
-void NonRigidTransform(const NScanRefinement::Pose3d& vel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxisd rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
     NormalCloud::Ptr tmp = NormalCloud().makeShared();
     const Eigen::Vector3d& t = pose.p;
-    const Eigen::Quaterniond& q = pose.q;
+    /*Eigen::Vector3d axis(0, 0, 1);
+    Eigen::AngleAxisd rotation(M_PI/2, axis);*/
+
+    const Eigen::Quaterniond q =  Eigen::Quaterniond(pose.q);
     for(size_t i = 0 ; i < input->size() ; i++){
         const double time = input->points[i].curvature;
         const auto pnt = (input->points[i]);
         const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
         const Eigen::Vector3d v_comp = vel.p*time;
+        //Eigen::AngleAxisd rotationScaled = rotation;
+        //rotationScaled.angle()*=time/0.1;
         const Eigen::Vector3d p_transformed = q*(p+v_comp) + t; // rigid transform
         const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
         const Eigen::Vector3d normal_transformed = q*normal;
@@ -185,9 +191,10 @@ void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>&
         const int idx = itr->first;
         NormalCloud::Ptr transformed = NormalCloud().makeShared();
         const Pose3d& vel = velocities_.at(idx);
+        const Eigen::AngleAxisd rotVel = angularvelocity_.at(idx);
         const Pose3d& pose = poses_.at(idx);
         const NormalCloud::Ptr& input = input_set.at(idx);
-        NonRigidTransform(vel, pose, input, transformed);
+        NonRigidTransform(vel, rotVel, pose, input, transformed);
         output[idx] = transformed;
         if(compute_kdtree){
             kdtree_[idx] = pcl::KdTreeFLANN<pcl::PointXYZINormal>().makeShared();
@@ -240,11 +247,19 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
         //cout << src_pnt.transpose() << ", " << dst_pnt.transpose() << ", " << dst_normal.transpose() << endl;
         //cout <<"block: "<< poses_[c.src_scan].q.coeffs().data()<<", " << poses_[c.src_scan].p.data() << ", " <<poses_[c.target_scan].q.coeffs().data() <<", " << poses_[c.target_scan].p.data() << endl;
     }
-    prob.AddResidualBlock(cost_function,
+    /*prob.AddResidualBlock(cost_function,
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
-            poses_[c.target_scan].q.coeffs().data(),
+            poses_[c.target_scan].q.angle()data(),
+            poses_[c.target_scan].p.data(),
+            velocities_[c.src_scan].p.data(),
+            velocities_[c.target_scan].p.data());*/
+    prob.AddResidualBlock(cost_function,
+                          scaled_loss,
+                          poses_[c.src_scan].q.axis().data(),
+            poses_[c.src_scan].p.data(),
+            poses_[c.target_scan].q.axis().data(),
             poses_[c.target_scan].p.data(),
             velocities_[c.src_scan].p.data(),
             velocities_[c.target_scan].p.data());

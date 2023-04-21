@@ -166,8 +166,8 @@ void NScanRefinement::GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Pt
 void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxisd rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
     NormalCloud::Ptr tmp = NormalCloud().makeShared();
     const Eigen::Vector3d& t = pose.p;
-    /*Eigen::Vector3d axis(0, 0, 1);
-    Eigen::AngleAxisd rotation(M_PI/2, axis);*/
+    Eigen::Vector3d axis(0, 0, M_PI/2);
+    Eigen::AngleAxisd rotation(0, axis);
 
     const Eigen::Quaterniond q =  Eigen::Quaterniond(pose.q);
     for(size_t i = 0 ; i < input->size() ; i++){
@@ -175,8 +175,8 @@ void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxi
         const auto pnt = (input->points[i]);
         const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
         const Eigen::Vector3d v_comp = vel.p*time;
-        //Eigen::AngleAxisd rotationScaled = rotation;
-        //rotationScaled.angle()*=time/0.1;
+        Eigen::AngleAxisd rotationScaled = rotation;
+        rotationScaled.angle()*=time/0.1;
         const Eigen::Vector3d p_transformed = q*(p+v_comp) + t; // rigid transform
         const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
         const Eigen::Vector3d normal_transformed = q*normal;
@@ -392,11 +392,11 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
             for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
                 const int idx = itr->first;
                 ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
-                problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
+                problem.SetParameterization(itr->second.q.axis().data(), quaternion_local_parameterization);
                 if(locked_[idx]){
                     cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(itr->second.p.data());
-                    problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
+                    problem.SetParameterBlockConstant(itr->second.q.axis().data());
                     problem.SetParameterBlockConstant(velocities_[idx].p.data());
                 }
                 else{

@@ -100,6 +100,12 @@ struct PointToPlaneErrorGlobalTime{
     template <typename T>
     bool operator()(const T* const src_camera_rot, const T* const src_camera_trans, const T* const dst_camera_rot, const T* const dst_camera_trans, const T* const velocity_src, const T* const velocity_dst, /* const T* const rad_vel_dst,*/ T* residuals) const {
 
+        Eigen::Matrix<T,3,1> dst_rot;
+        dst_rot << T(dst_camera_rot[0]), T(dst_camera_rot[1]), T(dst_camera_rot[2]);
+
+        Eigen::Matrix<T,3,1> src_rot;
+        src_rot << T(src_camera_rot[0]), T(src_camera_rot[1]), T(src_camera_rot[2]);
+
         const Eigen::Matrix<T,3,1> transt_src(src_camera_trans);
         const Eigen::Matrix<T,3,1> trans_dst(dst_camera_trans);
 
@@ -116,15 +122,15 @@ struct PointToPlaneErrorGlobalTime{
         Eigen::Matrix<T,3,1> p_src_transf; //velocity compensated, rotated
         Eigen::Matrix<T,3,1> p_dst_transf; //velocity compensated, rotated
 
-        ceres::AngleAxisRotatePoint(src_camera_rot, p_src_vel_comp, p_src_transf); //velocity compensated, rotated
-        ceres::AngleAxisRotatePoint(dst_camera_rot, p_dst_vel_comp, p_dst_transf);
+        ceres::AngleAxisRotatePoint(src_rot, p_src_vel_comp, p_src_transf); //velocity compensated, rotated
+        ceres::AngleAxisRotatePoint(dst_rot, p_dst_vel_comp, p_dst_transf);
 
         p_src_transf += transt_src; //add translation
         p_dst_transf += trans_dst;
 
 
         Eigen::Matrix<T,3,1> normal_dst_transf;
-        ceres::AngleAxisRotatePoint(dst_camera_rot, p_nor.cast<T>(), normal_dst_transf); //velocity compensated, rotated
+        ceres::AngleAxisRotatePoint(dst_rot, p_nor.cast<T>(), normal_dst_transf); //velocity compensated, rotated
 
         residuals[0] = (p_src_transf - p_dst_transf).dot(normal_dst_transf);
 

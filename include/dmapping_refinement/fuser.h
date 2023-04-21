@@ -22,6 +22,7 @@ public:
     NScanRefinement::Parameters reg_par;
     int tot_scans;
     int submap_size;
+    int skip_frames;
     int max_time = 60;
     int submap_history;
 
@@ -45,6 +46,7 @@ public:
       nh.param<bool>("/estimate_velocity", reg_par.estimate_velocity, true);
       nh.param<float>("/resolution", reg_par.resolution, 0.1);
       nh.param<int>("/max_time", max_time, 0);
+      nh.param<int>("/skip_frames", skip_frames, 0);
 
 
       //nh.getParam("/map_resolution", map_resolution);

@@ -34,7 +34,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
         pcl::VoxelGrid<pcl::PointXYZINormal> sor;
         sor.setMinimumPointsNumberPerVoxel(1);
         sor.setInputCloud(surf_[idx]);
-        sor.setLeafSize (0.05f, 0.05f, 0.05f);
+        sor.setLeafSize (par_.resolution, par_.resolution, par_.resolution);
         sor.filter (*filtered_[idx]);
         /*if(itr == poses_.begin()){
             std::fstream filestream("/home/daniel/Documents/after.dat", std::ios::out);
@@ -99,6 +99,7 @@ std::vector<std::pair<int,int> > NScanRefinement::AssociateScanPairsLogN(){
             //if(std::distance(itr_from,itr_to) % 2 ==0 || std::distance(itr_from,itr_to) == 1){ // 1 2 4 8 // optional - reduce from n^2 to log(n) where n is number of scans
             if( !(locked_[itr_from->first] && locked_[itr_to->first]) ){ // if not both locked
                 scan_pairs.push_back(std::make_pair(itr_to->first, itr_from->first)); // first paramter is sooner in time, second paramter is later in time.
+                //cout << "match: " << itr_to->first << " and " << itr_from->first << endl;
             }
         }
     }
@@ -223,9 +224,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
     const double t_src = surf_[c.src_scan]->points[c.src_idx].curvature;
     const double t_target = surf_[c.target_scan]->points[c.target_idx].curvature;
 
-    ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
-    //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
-    //ceres::CostFunction* cost_function = PointToPlaneErrorGlobal::Create(dst_pnt, src_pnt, dst_normal); // CHANGE THIS THIS IS WROOOOOOOOOOOOONG
+    ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); //´
     ceres::LossFunction* loss = nullptr;
     if(par_.loss == "huber")
         loss = new ceres::HuberLoss(0.1);
@@ -301,13 +300,13 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     locked_ = locked;
     cout << "before solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        cout << itr->second.p.transpose() << " -- " << locked_[itr->first] << endl;
+        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
     }
 
     Solve(solutionPose, solutionVel);
     cout << "after solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        cout << itr->second.p.transpose() << " -- " << locked_[itr->first] << endl;
+        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
     }
 }
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
@@ -349,9 +348,13 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
             }
         }
         VisualizeCorrespondance(correspondances);
-        std::map<int,NormalCloud::Ptr> raw_transformed;
-        TransformCommonFrame(surf_, raw_transformed, true);
-        VisualizePointCloudNormal(raw_transformed, "normals", normal_pub);
+        std::map<int,NormalCloud::Ptr> rawTransformed, filteredTransformed;
+        TransformCommonFrame(surf_, rawTransformed, false);
+        TransformCommonFrame(filtered_, filteredTransformed, false);
+
+
+        //VisualizePointCloudNormal(raw_transformed, "normals", normal_pub);
+        VisualizePointCloudNormal(filteredTransformed, "normalsDownsampled", normal_pub);
 
         for(auto && c : correspondances){
             addSurfCostFactor(c, problem);
@@ -370,16 +373,16 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
         if(!correspondances.empty()){
             auto pose_first_iter = poses_.begin();
 
-            ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
+
             for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
                 const int idx = itr->first;
+                ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
                 problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
                 if(locked_[idx]){
-                    //cout << "lock: " << idx << endl;
-                    problem.SetParameterBlockConstant(pose_first_iter->second.p.data());
-                    problem.SetParameterBlockConstant(pose_first_iter->second.q.coeffs().data());
+                    cout << "lock: " << idx << endl;
+                    problem.SetParameterBlockConstant(itr->second.p.data());
+                    problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
                     problem.SetParameterBlockConstant(velocities_[idx].p.data());
-                    //cout << "locked ";
                 }
                 else{
                     if(!par_.estimate_velocity)

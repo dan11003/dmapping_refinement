@@ -138,13 +138,14 @@ void Fuser::Save(const std::string& directory){
 }
 
 void Fuser::RunDebugger(){
-    int start = 1;
+    int start = par_.skip_frames;
     int end = std::distance(graph_->nodes.begin(), graph_->nodes.end());
 
     std::string input = "";
     char *endp;
 
     while(ros::ok()){
+        cout << "Index: " << start << endl;
         cout << "(r)egister, (s)tatus, (v)isualize, <number> set start, (e)xit" << endl;
         std::cin.clear();
         std::cin >> input;
@@ -319,19 +320,23 @@ void Fuser::RunSubmapFuser(){
 
     Eigen::Isometry3d poseScanLast;
     int idxScanLast;
+    bool firstSubmap = true;
     std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
     for (auto submapItr = submaps.begin() ; submapItr != submaps.end() ; submapItr++ ) {
         std::map<int,NScanRefinement::Pose3d> posePar, velPar;
         if(!ros::ok())
             return;
 
-        cout << "Press to Start Next iteration" << endl;
-        char c = getchar();
+        if( !submapItr->empty() && submapItr->begin()->first < par_.skip_frames ){ // if there is something to process and index should not be skipped
+            cout << "skip to " <<par_.skip_frames << endl;
+            continue;
+        }
 
         for (auto scanItr = submapItr->begin() ; scanItr != submapItr->end() ; scanItr++) {
             const int currIdx = scanItr->first;
-            if(submapItr == submaps.begin()){ // lock the very first node only
+            if(firstSubmap){ // lock the very first node only
                 posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly from graph
+                firstSubmap = false;
             }
             else if(scanItr == submapItr->begin()){  // if first in the submap but not in first node,
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(idxScanLast,currIdx)]; // we use odometry prediciton stored in the constraints...
@@ -344,6 +349,7 @@ void Fuser::RunSubmapFuser(){
                 posePar[currIdx] = ToPose3d(prev*inc); // this is important, otherwise there will be additional drift between submaps
             }
         }
+
         cout << "history: " << keyframesHistory.size() << endl;
         std::map<int,bool> submapWithKeyFrames = *submapItr;
         auto surfWithKeyFrame = surf_;
@@ -373,14 +379,10 @@ void Fuser::RunSubmapFuser(){
             p.curvature = 0;
         }
         std::map<int,NormalCloud::Ptr> aggMap = {{-idxScanLast,aggregated}};
+        pcl::transformPointCloudWithNormals(*aggregated, *aggregatedTransformed, poseScanLast.matrix()); //Transform to local frame of SubmapLas
 
         PublishCloud("/aggregatedTransformed", *aggregatedTransformed, "world", ros::Time::now(), nh_);
-        VisualizePointCloudNormal(aggMap, "aggregated", pub);
-
-        usleep(1000*1000);
-
-        PublishCloud("/aggregatedTransformed", *aggregatedTransformed, "world", ros::Time::now(), nh_);
-        VisualizePointCloudNormal(aggMap, "aggregated", pub);
+        //VisualizePointCloudNormal(aggMap, "aggregated", pub);
 
         keyframesHistory.push_back(keyframes{poseScanLast, aggregated, -idxScanLast}); // make negative to avoid conflict - only submaps are negative
         if(keyframesHistory.size() > par_.submap_history)

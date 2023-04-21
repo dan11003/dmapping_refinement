@@ -222,13 +222,17 @@ bool SurfelExtraction::GetNeighbours(const vel_point::PointXYZIRTC& pnt, Eigen::
     //cout << "dim: " << neighbours.rows() << " x " << neighbours.cols() << endl;
     LineNNSearch(ring, time,first, neighbours);
     //cout << "dim: " << neighbours.rows() << " x " << neighbours.cols() << endl;
-    if(ring < n_scan_lines_ - 1){
-        LineNNSearch(ring+1, time, first, neighbours);
-    }
-    //cout << "dim: " << neighbours.rows() << " x " << neighbours.cols() << endl;
-    // not first ring
-    if(ring > 0 ){
+
+    if(ring == n_scan_lines_ -1){ // top ring
         LineNNSearch(ring-1, time, first, neighbours);
+        LineNNSearch(ring-2, time, first, neighbours);
+    }
+    else if(ring == 0 ){ // bot ring
+        LineNNSearch(ring+1, time, first, neighbours);
+        LineNNSearch(ring+2, time, first, neighbours);
+    }else{ // all other cases
+        LineNNSearch(ring-1, time, first, neighbours);
+        LineNNSearch(ring+1, time, first, neighbours);
     }
     neighbours.conservativeResize(first,3);
     //cout << "dim: " << neighbours.rows() << " x " << neighbours.cols() << endl;

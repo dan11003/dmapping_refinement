@@ -9,6 +9,7 @@ Panels:
         - /PointCloud24
         - /PointCloud25/Autocompute Value Bounds1
         - /debug1
+        - /debug1/PointCloud21
         - /debug1/Marker1
         - /debug1/Marker2
         - /debug1/PointCloud22
@@ -125,45 +126,343 @@ Visualization Manager:
       Frame Timeout: 1.5e+08
       Frames:
         All Enabled: false
-        reg_node_1:
+        reg_node_-142:
           Value: true
-        reg_node_10:
+        reg_node_-144:
           Value: true
-        reg_node_11:
+        reg_node_-146:
           Value: true
-        reg_node_12:
+        reg_node_-148:
           Value: true
-        reg_node_13:
+        reg_node_-150:
           Value: true
-        reg_node_14:
+        reg_node_-152:
           Value: true
-        reg_node_15:
+        reg_node_-154:
           Value: true
-        reg_node_16:
+        reg_node_-156:
           Value: true
-        reg_node_17:
+        reg_node_-158:
           Value: true
-        reg_node_18:
+        reg_node_-160:
           Value: true
-        reg_node_19:
+        reg_node_-162:
           Value: true
-        reg_node_2:
+        reg_node_-164:
           Value: true
-        reg_node_20:
+        reg_node_-166:
           Value: true
-        reg_node_3:
+        reg_node_-168:
           Value: true
-        reg_node_4:
+        reg_node_-170:
           Value: true
-        reg_node_5:
+        reg_node_-172:
           Value: true
-        reg_node_6:
+        reg_node_-174:
           Value: true
-        reg_node_7:
+        reg_node_-176:
           Value: true
-        reg_node_8:
+        reg_node_-178:
           Value: true
-        reg_node_9:
+        reg_node_-180:
+          Value: true
+        reg_node_-182:
+          Value: true
+        reg_node_-184:
+          Value: true
+        reg_node_-186:
+          Value: true
+        reg_node_-188:
+          Value: true
+        reg_node_-190:
+          Value: true
+        reg_node_-192:
+          Value: true
+        reg_node_-194:
+          Value: true
+        reg_node_-196:
+          Value: true
+        reg_node_-198:
+          Value: true
+        reg_node_-200:
+          Value: true
+        reg_node_-202:
+          Value: true
+        reg_node_-204:
+          Value: true
+        reg_node_-206:
+          Value: true
+        reg_node_-208:
+          Value: true
+        reg_node_-210:
+          Value: true
+        reg_node_-212:
+          Value: true
+        reg_node_-214:
+          Value: true
+        reg_node_-216:
+          Value: true
+        reg_node_-218:
+          Value: true
+        reg_node_-220:
+          Value: true
+        reg_node_-222:
+          Value: true
+        reg_node_-224:
+          Value: true
+        reg_node_-226:
+          Value: true
+        reg_node_-228:
+          Value: true
+        reg_node_-230:
+          Value: true
+        reg_node_-232:
+          Value: true
+        reg_node_-234:
+          Value: true
+        reg_node_-236:
+          Value: true
+        reg_node_-238:
+          Value: true
+        reg_node_-240:
+          Value: true
+        reg_node_-242:
+          Value: true
+        reg_node_-244:
+          Value: true
+        reg_node_-246:
+          Value: true
+        reg_node_-248:
+          Value: true
+        reg_node_-250:
+          Value: true
+        reg_node_-252:
+          Value: true
+        reg_node_141:
+          Value: true
+        reg_node_142:
+          Value: true
+        reg_node_143:
+          Value: true
+        reg_node_144:
+          Value: true
+        reg_node_145:
+          Value: true
+        reg_node_146:
+          Value: true
+        reg_node_147:
+          Value: true
+        reg_node_148:
+          Value: true
+        reg_node_149:
+          Value: true
+        reg_node_150:
+          Value: true
+        reg_node_151:
+          Value: true
+        reg_node_152:
+          Value: true
+        reg_node_153:
+          Value: true
+        reg_node_154:
+          Value: true
+        reg_node_155:
+          Value: true
+        reg_node_156:
+          Value: true
+        reg_node_157:
+          Value: true
+        reg_node_158:
+          Value: true
+        reg_node_159:
+          Value: true
+        reg_node_160:
+          Value: true
+        reg_node_161:
+          Value: true
+        reg_node_162:
+          Value: true
+        reg_node_163:
+          Value: true
+        reg_node_164:
+          Value: true
+        reg_node_165:
+          Value: true
+        reg_node_166:
+          Value: true
+        reg_node_167:
+          Value: true
+        reg_node_168:
+          Value: true
+        reg_node_169:
+          Value: true
+        reg_node_170:
+          Value: true
+        reg_node_171:
+          Value: true
+        reg_node_172:
+          Value: true
+        reg_node_173:
+          Value: true
+        reg_node_174:
+          Value: true
+        reg_node_175:
+          Value: true
+        reg_node_176:
+          Value: true
+        reg_node_177:
+          Value: true
+        reg_node_178:
+          Value: true
+        reg_node_179:
+          Value: true
+        reg_node_180:
+          Value: true
+        reg_node_181:
+          Value: true
+        reg_node_182:
+          Value: true
+        reg_node_183:
+          Value: true
+        reg_node_184:
+          Value: true
+        reg_node_185:
+          Value: true
+        reg_node_186:
+          Value: true
+        reg_node_187:
+          Value: true
+        reg_node_188:
+          Value: true
+        reg_node_189:
+          Value: true
+        reg_node_190:
+          Value: true
+        reg_node_191:
+          Value: true
+        reg_node_192:
+          Value: true
+        reg_node_193:
+          Value: true
+        reg_node_194:
+          Value: true
+        reg_node_195:
+          Value: true
+        reg_node_196:
+          Value: true
+        reg_node_197:
+          Value: true
+        reg_node_198:
+          Value: true
+        reg_node_199:
+          Value: true
+        reg_node_200:
+          Value: true
+        reg_node_201:
+          Value: true
+        reg_node_202:
+          Value: true
+        reg_node_203:
+          Value: true
+        reg_node_204:
+          Value: true
+        reg_node_205:
+          Value: true
+        reg_node_206:
+          Value: true
+        reg_node_207:
+          Value: true
+        reg_node_208:
+          Value: true
+        reg_node_209:
+          Value: true
+        reg_node_210:
+          Value: true
+        reg_node_211:
+          Value: true
+        reg_node_212:
+          Value: true
+        reg_node_213:
+          Value: true
+        reg_node_214:
+          Value: true
+        reg_node_215:
+          Value: true
+        reg_node_216:
+          Value: true
+        reg_node_217:
+          Value: true
+        reg_node_218:
+          Value: true
+        reg_node_219:
+          Value: true
+        reg_node_220:
+          Value: true
+        reg_node_221:
+          Value: true
+        reg_node_222:
+          Value: true
+        reg_node_223:
+          Value: true
+        reg_node_224:
+          Value: true
+        reg_node_225:
+          Value: true
+        reg_node_226:
+          Value: true
+        reg_node_227:
+          Value: true
+        reg_node_228:
+          Value: true
+        reg_node_229:
+          Value: true
+        reg_node_230:
+          Value: true
+        reg_node_231:
+          Value: true
+        reg_node_232:
+          Value: true
+        reg_node_233:
+          Value: true
+        reg_node_234:
+          Value: true
+        reg_node_235:
+          Value: true
+        reg_node_236:
+          Value: true
+        reg_node_237:
+          Value: true
+        reg_node_238:
+          Value: true
+        reg_node_239:
+          Value: true
+        reg_node_240:
+          Value: true
+        reg_node_241:
+          Value: true
+        reg_node_242:
+          Value: true
+        reg_node_243:
+          Value: true
+        reg_node_244:
+          Value: true
+        reg_node_245:
+          Value: true
+        reg_node_246:
+          Value: true
+        reg_node_247:
+          Value: true
+        reg_node_248:
+          Value: true
+        reg_node_249:
+          Value: true
+        reg_node_250:
+          Value: true
+        reg_node_251:
+          Value: true
+        reg_node_252:
+          Value: true
+        reg_node_253:
           Value: true
         world:
           Value: true
@@ -175,45 +474,343 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          reg_node_1:
+          reg_node_-142:
             {}
-          reg_node_10:
+          reg_node_-144:
             {}
-          reg_node_11:
+          reg_node_-146:
             {}
-          reg_node_12:
+          reg_node_-148:
             {}
-          reg_node_13:
+          reg_node_-150:
             {}
-          reg_node_14:
+          reg_node_-152:
             {}
-          reg_node_15:
+          reg_node_-154:
             {}
-          reg_node_16:
+          reg_node_-156:
             {}
-          reg_node_17:
+          reg_node_-158:
             {}
-          reg_node_18:
+          reg_node_-160:
             {}
-          reg_node_19:
+          reg_node_-162:
             {}
-          reg_node_2:
+          reg_node_-164:
             {}
-          reg_node_20:
+          reg_node_-166:
             {}
-          reg_node_3:
+          reg_node_-168:
             {}
-          reg_node_4:
+          reg_node_-170:
             {}
-          reg_node_5:
+          reg_node_-172:
             {}
-          reg_node_6:
+          reg_node_-174:
             {}
-          reg_node_7:
+          reg_node_-176:
             {}
-          reg_node_8:
+          reg_node_-178:
             {}
-          reg_node_9:
+          reg_node_-180:
+            {}
+          reg_node_-182:
+            {}
+          reg_node_-184:
+            {}
+          reg_node_-186:
+            {}
+          reg_node_-188:
+            {}
+          reg_node_-190:
+            {}
+          reg_node_-192:
+            {}
+          reg_node_-194:
+            {}
+          reg_node_-196:
+            {}
+          reg_node_-198:
+            {}
+          reg_node_-200:
+            {}
+          reg_node_-202:
+            {}
+          reg_node_-204:
+            {}
+          reg_node_-206:
+            {}
+          reg_node_-208:
+            {}
+          reg_node_-210:
+            {}
+          reg_node_-212:
+            {}
+          reg_node_-214:
+            {}
+          reg_node_-216:
+            {}
+          reg_node_-218:
+            {}
+          reg_node_-220:
+            {}
+          reg_node_-222:
+            {}
+          reg_node_-224:
+            {}
+          reg_node_-226:
+            {}
+          reg_node_-228:
+            {}
+          reg_node_-230:
+            {}
+          reg_node_-232:
+            {}
+          reg_node_-234:
+            {}
+          reg_node_-236:
+            {}
+          reg_node_-238:
+            {}
+          reg_node_-240:
+            {}
+          reg_node_-242:
+            {}
+          reg_node_-244:
+            {}
+          reg_node_-246:
+            {}
+          reg_node_-248:
+            {}
+          reg_node_-250:
+            {}
+          reg_node_-252:
+            {}
+          reg_node_141:
+            {}
+          reg_node_142:
+            {}
+          reg_node_143:
+            {}
+          reg_node_144:
+            {}
+          reg_node_145:
+            {}
+          reg_node_146:
+            {}
+          reg_node_147:
+            {}
+          reg_node_148:
+            {}
+          reg_node_149:
+            {}
+          reg_node_150:
+            {}
+          reg_node_151:
+            {}
+          reg_node_152:
+            {}
+          reg_node_153:
+            {}
+          reg_node_154:
+            {}
+          reg_node_155:
+            {}
+          reg_node_156:
+            {}
+          reg_node_157:
+            {}
+          reg_node_158:
+            {}
+          reg_node_159:
+            {}
+          reg_node_160:
+            {}
+          reg_node_161:
+            {}
+          reg_node_162:
+            {}
+          reg_node_163:
+            {}
+          reg_node_164:
+            {}
+          reg_node_165:
+            {}
+          reg_node_166:
+            {}
+          reg_node_167:
+            {}
+          reg_node_168:
+            {}
+          reg_node_169:
+            {}
+          reg_node_170:
+            {}
+          reg_node_171:
+            {}
+          reg_node_172:
+            {}
+          reg_node_173:
+            {}
+          reg_node_174:
+            {}
+          reg_node_175:
+            {}
+          reg_node_176:
+            {}
+          reg_node_177:
+            {}
+          reg_node_178:
+            {}
+          reg_node_179:
+            {}
+          reg_node_180:
+            {}
+          reg_node_181:
+            {}
+          reg_node_182:
+            {}
+          reg_node_183:
+            {}
+          reg_node_184:
+            {}
+          reg_node_185:
+            {}
+          reg_node_186:
+            {}
+          reg_node_187:
+            {}
+          reg_node_188:
+            {}
+          reg_node_189:
+            {}
+          reg_node_190:
+            {}
+          reg_node_191:
+            {}
+          reg_node_192:
+            {}
+          reg_node_193:
+            {}
+          reg_node_194:
+            {}
+          reg_node_195:
+            {}
+          reg_node_196:
+            {}
+          reg_node_197:
+            {}
+          reg_node_198:
+            {}
+          reg_node_199:
+            {}
+          reg_node_200:
+            {}
+          reg_node_201:
+            {}
+          reg_node_202:
+            {}
+          reg_node_203:
+            {}
+          reg_node_204:
+            {}
+          reg_node_205:
+            {}
+          reg_node_206:
+            {}
+          reg_node_207:
+            {}
+          reg_node_208:
+            {}
+          reg_node_209:
+            {}
+          reg_node_210:
+            {}
+          reg_node_211:
+            {}
+          reg_node_212:
+            {}
+          reg_node_213:
+            {}
+          reg_node_214:
+            {}
+          reg_node_215:
+            {}
+          reg_node_216:
+            {}
+          reg_node_217:
+            {}
+          reg_node_218:
+            {}
+          reg_node_219:
+            {}
+          reg_node_220:
+            {}
+          reg_node_221:
+            {}
+          reg_node_222:
+            {}
+          reg_node_223:
+            {}
+          reg_node_224:
+            {}
+          reg_node_225:
+            {}
+          reg_node_226:
+            {}
+          reg_node_227:
+            {}
+          reg_node_228:
+            {}
+          reg_node_229:
+            {}
+          reg_node_230:
+            {}
+          reg_node_231:
+            {}
+          reg_node_232:
+            {}
+          reg_node_233:
+            {}
+          reg_node_234:
+            {}
+          reg_node_235:
+            {}
+          reg_node_236:
+            {}
+          reg_node_237:
+            {}
+          reg_node_238:
+            {}
+          reg_node_239:
+            {}
+          reg_node_240:
+            {}
+          reg_node_241:
+            {}
+          reg_node_242:
+            {}
+          reg_node_243:
+            {}
+          reg_node_244:
+            {}
+          reg_node_245:
+            {}
+          reg_node_246:
+            {}
+          reg_node_247:
+            {}
+          reg_node_248:
+            {}
+          reg_node_249:
+            {}
+          reg_node_250:
+            {}
+          reg_node_251:
+            {}
+          reg_node_252:
+            {}
+          reg_node_253:
             {}
       Update Interval: 0
       Value: true
@@ -236,13 +833,13 @@ Visualization Manager:
       Reference Frame: world
       Value: false
     - Alpha: 0.20000000298023224
-      Autocompute Intensity Bounds: false
+      Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 2.128328561782837
         Min Value: -2.830706834793091
         Value: true
       Axis: Z
-      Channel Name: intensity
+      Channel Name: curvature
       Class: rviz/PointCloud2
       Color: 0; 0; 0
       Color Transformer: Intensity
@@ -250,9 +847,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 0; 0; 0
-      Max Intensity: 120
       Min Color: 255; 255; 255
-      Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -543,7 +1138,7 @@ Visualization Manager:
           Color: 0; 0; 0
           Color Transformer: Intensity
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 0; 0; 0
           Max Intensity: 120
@@ -560,10 +1155,10 @@ Visualization Manager:
           Unreliable: false
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /aggregated
+          Marker Topic: /submap_normals
           Name: Marker
           Namespaces:
             {}
@@ -586,9 +1181,9 @@ Visualization Manager:
           Axis: Z
           Channel Name: intensity
           Class: rviz/PointCloud2
-          Color: 0; 0; 0
+          Color: 255; 255; 255
           Color Transformer: Intensity
-          Decay Time: 0
+          Decay Time: 1000
           Enabled: true
           Invert Rainbow: false
           Max Color: 0; 0; 0
@@ -599,7 +1194,7 @@ Visualization Manager:
           Position Transformer: XYZ
           Queue Size: 10
           Selectable: true
-          Size (Pixels): 3
+          Size (Pixels): 2
           Size (m): 0.009999999776482582
           Style: Points
           Topic: /aggregatedTransformed
@@ -625,7 +1220,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 3.3349831104278564
+      Distance: 6.7384233474731445
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -633,17 +1228,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.5309794545173645
-        Y: 0.24193251132965088
-        Z: -4.082918167114258e-06
+        X: 3.7543489933013916
+        Y: 3.735332727432251
+        Z: -3.725290298461914e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6447976231575012
+      Pitch: 1.2047979831695557
       Target Frame: <Fixed Frame>
-      Yaw: 2.2616610527038574
+      Yaw: 1.0553382635116577
     Saved: ~
 Window Geometry:
   Displays:

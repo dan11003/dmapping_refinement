@@ -85,6 +85,8 @@ void VisualizePointCloudNormal(std::map<int,NormalCloud::Ptr>& input, const std:
 
 Eigen::Isometry3d EigenCombine(const Eigen::AngleAxisd& q, const Eigen::Vector3d& transl);
 
+Eigen::Isometry3d EigenCombine(const Eigen::Quaterniond& q, const Eigen::Vector3d& transl);
+
 /*class RotErrorTerm {
  public:
   RotErrorTerm(Eigen::Quaterniond q_a_measured,

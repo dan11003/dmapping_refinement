@@ -368,7 +368,7 @@ void Fuser::RunSubmapFuser(){
         idxScanLast = std::prev(submapItr->end())->first;
         poseScanLast =  ToIsometry3d(posePar[idxScanLast]);
         for(auto && [idx,lock] : (*submapItr)){ // apply non-rigid transformation and concatinate scans into local frame, do only for scans, not previous keyframes
-            NonRigidTransform(velPar[idx], Eigen::AngleAxisd::Identity(), NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered
+            NonRigidTransform(velPar[idx], {0,0,0}, NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered
             NormalCloud::Ptr tmp = NormalCloud().makeShared();
             pcl::transformPointCloudWithNormals(*surf_[idx], *tmp, (poseScanLast.inverse()*ToIsometry3d(posePar[idx])).matrix()); //Transform to local frame of SubmapLas
             *aggregated += *tmp;
@@ -425,7 +425,7 @@ Eigen::Isometry3d ToIsometry3d(const NScanRefinement::Pose3d& T){
     return EigenCombine(T.q, T.p);
 }
 NScanRefinement::Pose3d ToPose3d(const Eigen::Isometry3d& T){
-    return NScanRefinement::Pose3d{T.translation(), Eigen::AngleAxisd::fromRotationMatrix(T.linear()) };
+    return NScanRefinement::Pose3d{T.translation(), Eigen::Quaterniond(T.linear()) };
 }
 
 }

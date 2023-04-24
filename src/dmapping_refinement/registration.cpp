@@ -15,9 +15,8 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     // Initialize
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        velocities_[idx].p = Eigen::Vector3d(0,0,0);
-        velocities_[idx].q = Eigen::Quaterniond::Identity();
-        angularvelocity_[idx] = Eigen::AngleAxisd::Identity();
+        velocities_[idx].p = Eigen::Vector3d(0, 0, 0); // per second
+        angularvelocity_[idx] = Eigen::Vector3d(0, 0, 0); // per second
     }
     // Filter
 
@@ -163,11 +162,9 @@ void NScanRefinement::GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Pt
     TransformCommonFrame(surf_, output, false);
 }
 
-void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxisd rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
+void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::Vector3d& rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
     NormalCloud::Ptr tmp = NormalCloud().makeShared();
     const Eigen::Vector3d& t = pose.p;
-    Eigen::Vector3d axis(0, 0, M_PI/2);
-    Eigen::AngleAxisd rotation(0, axis);
 
     const Eigen::Quaterniond q =  Eigen::Quaterniond(pose.q);
     for(size_t i = 0 ; i < input->size() ; i++){
@@ -175,11 +172,16 @@ void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::AngleAxi
         const auto pnt = (input->points[i]);
         const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
         const Eigen::Vector3d v_comp = vel.p*time;
-        Eigen::AngleAxisd rotationScaled = rotation;
-        rotationScaled.angle()*=time/0.1;
-        const Eigen::Vector3d p_transformed = q*(p+v_comp) + t; // rigid transform
+        //const Eigen::Quaterniond rotComp(Eigen::AngleAxisd (rotNorm, rotAxis));
+        const Eigen::Vector3d rotCompVec = rotVel*time;
+        Eigen::Matrix3d rotCompMat;
+        ceres::AngleAxisToRotationMatrix(rotCompVec.data(),rotCompMat.data());
+        /*if(i == input->size()/2 || i == 0 || i== input->size() -1)
+            cout <<"rot mat: " <<rotCompMat << endl;;*/
+
+        const Eigen::Vector3d p_transformed = q*(rotCompMat*p+v_comp) + t; // rigid transform
         const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
-        const Eigen::Vector3d normal_transformed = q*normal;
+        const Eigen::Vector3d normal_transformed = q*(rotCompMat*normal);
         tmp->push_back(EigToPnt(p_transformed, normal_transformed, input->points[i].intensity, input->points[i].curvature));
     }
     output->clear();
@@ -191,10 +193,11 @@ void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>&
         const int idx = itr->first;
         NormalCloud::Ptr transformed = NormalCloud().makeShared();
         const Pose3d& vel = velocities_.at(idx);
-        const Eigen::AngleAxisd rotVel = angularvelocity_.at(idx);
+        const Eigen::Vector3d rotAxis = angularvelocity_.at(idx);
+
         const Pose3d& pose = poses_.at(idx);
         const NormalCloud::Ptr& input = input_set.at(idx);
-        NonRigidTransform(vel, rotVel, pose, input, transformed);
+        NonRigidTransform(vel, rotAxis, pose, input, transformed);
         output[idx] = transformed;
         if(compute_kdtree){
             kdtree_[idx] = pcl::KdTreeFLANN<pcl::PointXYZINormal>().makeShared();
@@ -251,25 +254,23 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
-            poses_[c.target_scan].q.angle()data(),
+            poses_[c.target_scan].q.coeffs().data(),
             poses_[c.target_scan].p.data(),
             velocities_[c.src_scan].p.data(),
             velocities_[c.target_scan].p.data());*/
     prob.AddResidualBlock(cost_function,
                           scaled_loss,
-                          poses_[c.src_scan].q.axis().data(),
-            poses_[c.src_scan].p.data(),
-            poses_[c.target_scan].q.axis().data(),
-            poses_[c.target_scan].p.data(),
-            velocities_[c.src_scan].p.data(),
-            velocities_[c.target_scan].p.data());
-    /*prob.AddResidualBlock(cost_function,
-                          scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
             poses_[c.src_scan].p.data(),
             poses_[c.target_scan].q.coeffs().data(),
-            poses_[c.target_scan].p.data());
-*/
+            poses_[c.target_scan].p.data(),
+            velocities_[c.src_scan].p.data(),
+            velocities_[c.target_scan].p.data(),
+            angularvelocity_[c.src_scan].data(),
+            angularvelocity_[c.target_scan].data()
+            );
+
+
 }
 
 
@@ -315,13 +316,15 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     locked_ = locked;
     cout << "before solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+        //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << " - " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
     }
 
     Solve(solutionPose, solutionVel);
     cout << "after solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+        //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << " - " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
     }
 }
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
@@ -392,26 +395,33 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
             for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
                 const int idx = itr->first;
                 ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
-                problem.SetParameterization(itr->second.q.axis().data(), quaternion_local_parameterization);
+                problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
                 if(locked_[idx]){
                     cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(itr->second.p.data());
-                    problem.SetParameterBlockConstant(itr->second.q.axis().data());
+                    problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
                     problem.SetParameterBlockConstant(velocities_[idx].p.data());
+                    problem.SetParameterBlockConstant(angularvelocity_[idx].data());
                 }
                 else{
                     if(!par_.estimate_velocity)
                         problem.SetParameterBlockConstant(velocities_[idx].p.data());
+                    if(!par_.estimate_rot_vel)
+                        problem.SetParameterBlockConstant(angularvelocity_[idx].data());
                 }
 
             }
             cout << "Minimize" << endl;
             ceres::Solve(options, &problem, &summary);
             cout << "solved" << endl;
-            //cout << summary.FullReport() << endl;
-            //cout << "score: " << summary.final_cost / summary.num_residuals << endl;
+            if(!summary.IsSolutionUsable()){
+                cout << "ERROR NOT USABLE" << endl;
+                exit(0);
+            }
+            cout << "score: " << summary.final_cost / summary.num_residuals << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
         }
+        //cout << summary.FullReport() << endl;
         Visualize("/after_reg");
     }
     solutionPose = poses_;

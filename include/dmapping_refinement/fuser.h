@@ -44,6 +44,7 @@ public:
       nh.param<int>("/submap_size", submap_size, 6);
       nh.param<int>("/submap_history", submap_history, 3);
       nh.param<bool>("/estimate_velocity", reg_par.estimate_velocity, true);
+      nh.param<bool>("/estimate_rotation", reg_par.estimate_rot_vel, true);
       nh.param<float>("/resolution", reg_par.resolution, 0.1);
       nh.param<int>("/max_time", max_time, 0);
       nh.param<int>("/skip_frames", skip_frames, 0);

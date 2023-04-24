@@ -1,26 +1,25 @@
 <?xml version="1.0"?>
 <launch>
 
-    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Mon_2023.04.17_18:56:13/graph.pg" />
+    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Mon_2023.04.24_13:32:33/graph.pg" />
     <!--arg name="slam_param_file" default="$(find lio_sam)/config/params_structor_outdoor.yaml" /-->
     <param name="keyframe_min_transl" type="double" value="0.1" /> <!-- 0.05 -->
     <param name="keyframe_min_rot" type="double" value="1" /> <!-- 0.035 -->
-    <param name="use_keyframe" type="bool" value="false" />
-    <param name="inner_iterations" type="double" value="10" />
-    <param name="outer_iterations" type="double" value="10" />
+    <param name="use_keyframe" type="bool" value="true" />
+    <param name="inner_iterations" type="double" value="5" />
+    <param name="outer_iterations" type="double" value="5" />
     <param name="max_dist_association" type="double" value="1.5" />
     <param name="tot_scans" type="double" value="0" />
-    <param name="resolution" type="double" value="0.05" />
+    <param name="resolution" type="double" value="0.2" />
     <param name="debugger" type="bool" value="true" />
     <param name="estimate_velocity" type="bool" value="true" />
-    <param name="estimate_rotation" type="bool" value="true" />
     <param name="directory_output" type="string" value="/home/daniel/Documents/cloud/" />
     <param name="export_pcd" type="bool" value="false" />
-    <param name="skip_frames" type="int" value="230" />
+    <param name="skip_frames" type="int" value="680" />
     <!--param name="max_time" type="int" value="100" /-->
 
-    <param name="submap_size" type="double" value="8" /> <!-- adjusted to closest even number -->
-    <param name="submap_history" type="int" value="5" />
+    <param name="submap_size" type="double" value="20" /> <!-- adjusted to closest even number -->
+    <param name="submap_history" type="int" value="10" />
 
 
 

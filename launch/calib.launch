@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+
+
+
+
+<param name="use_sim_time" type="bool" value="true" />
+
+    <node pkg="dmapping_refinement" type="calib" name="calib" output="screen"/>
+    
+    <arg name="rviz" default="true" />
+    <group if="$(arg rviz)">
+        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find dmapping_refinement)/rviz/calib.rviz" />
+    </group>
+
+<node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" args="$(find dmapping_refinement)/cfg/calibParams.cfg" />
+    
+    
+
+</launch>
+

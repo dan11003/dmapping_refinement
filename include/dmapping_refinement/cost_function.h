@@ -172,8 +172,8 @@ struct PointToPlaneErrorGlobalTime{
 
         //const Eigen::Quaternion<T> rad_w_dst(rad_vel_dst);
 
-        const Eigen::Matrix<T,3,1>& p_src_jet = p_src.cast<T>();
-        const Eigen::Matrix<T,3,1>& p_dst_jet = p_dst.cast<T>();
+        const Eigen::Matrix<T,3,1> p_src_jet = p_src.cast<T>();
+        const Eigen::Matrix<T,3,1> p_dst_jet = p_dst.cast<T>();
 
         const Eigen::Matrix<T,3,1> p_src_compensated = Compensate(p_src_jet, rotVelocity_src, velocity_src, T(t_src_));
         const Eigen::Matrix<T,3,1> p_tar_compensated = Compensate(p_dst_jet, rotVelocity_dst, velocity_dst, T(t_target_));

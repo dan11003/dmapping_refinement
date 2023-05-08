@@ -29,7 +29,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "lio_sam/generics.h"
-#include "dmapping_refinement/d_utils.h"
+#include "dmapping_refinement/dutils.h"
 #include "dmapping_refinement/fuser.h"
 #include <omp.h>
 

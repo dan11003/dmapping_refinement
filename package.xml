@@ -50,5 +50,6 @@
   
   <build_depend>lio_sam</build_depend>
   <exec_depend>lio_sam</exec_depend>
-  
+  <export>
+  </export>
 </package>

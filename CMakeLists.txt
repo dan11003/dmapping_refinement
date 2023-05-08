@@ -11,18 +11,19 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   roscpp
   rospy
+  lio_sam
+  floam
   rosbag
   std_msgs
   tf
   eigen_conversions
   tf_conversions
-  lio_sam
-  floam
+  dynamic_reconfigure
 )
 
 #add dynamic reconfigure api
 #find_package(catkin REQUIRED dynamic_reconfigure)
-find_package(catkin REQUIRED dynamic_reconfigure)
+find_package(catkin REQUIRED )
 
 generate_dynamic_reconfigure_options(
         cfg/calibParams.cfg
@@ -77,7 +78,7 @@ catkin_package(
 
 
 set (${PROJECT_NAME}_LIB_SRCS
-  src/dmapping_refinement/d_utils.cpp
+  src/dmapping_refinement/dutils.cpp
   src/dmapping_refinement/fuser.cpp
   src/dmapping_refinement/registration.cpp
 )
@@ -93,3 +94,7 @@ add_dependencies(refinement_node ${catkin_EXPORTED_TARGETS})
 add_executable(testopti src/test_opti.cpp)
 target_link_libraries(testopti ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
 add_dependencies(testopti ${catkin_EXPORTED_TARGETS})
+
+add_executable(calib src/calib.cpp)
+target_link_libraries(calib ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} )
+add_dependencies(calib ${catkin_EXPORTED_TARGETS})

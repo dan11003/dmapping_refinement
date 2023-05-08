@@ -6,12 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1
-        - /PointCloud24
-        - /PointCloud25/Autocompute Value Bounds1
+        - /PointCloud24/Autocompute Value Bounds1
         - /debug1
         - /debug1/Marker1
         - /debug1/Marker2
-        - /debug1/PointCloud22
       Splitter Ratio: 0.4853801131248474
     Tree Height: 878
   - Class: rviz/Selection
@@ -125,21 +123,25 @@ Visualization Manager:
       Frame Timeout: 1.5e+08
       Frames:
         All Enabled: false
-        reg_node_230:
+        reg_node_10:
           Value: true
-        reg_node_231:
+        reg_node_11:
           Value: true
-        reg_node_232:
+        reg_node_12:
           Value: true
-        reg_node_233:
+        reg_node_13:
           Value: true
-        reg_node_234:
+        reg_node_14:
           Value: true
-        reg_node_235:
+        reg_node_15:
           Value: true
-        reg_node_236:
+        reg_node_16:
           Value: true
-        reg_node_237:
+        reg_node_17:
+          Value: true
+        reg_node_18:
+          Value: true
+        reg_node_19:
           Value: true
         world:
           Value: true
@@ -151,21 +153,25 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          reg_node_230:
+          reg_node_10:
             {}
-          reg_node_231:
+          reg_node_11:
             {}
-          reg_node_232:
+          reg_node_12:
             {}
-          reg_node_233:
+          reg_node_13:
             {}
-          reg_node_234:
+          reg_node_14:
             {}
-          reg_node_235:
+          reg_node_15:
             {}
-          reg_node_236:
+          reg_node_16:
             {}
-          reg_node_237:
+          reg_node_17:
+            {}
+          reg_node_18:
+            {}
+          reg_node_19:
             {}
       Update Interval: 0
       Value: true
@@ -187,34 +193,6 @@ Visualization Manager:
       Plane Cell Count: 1000
       Reference Frame: world
       Value: false
-    - Alpha: 0.5
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 2.128328561782837
-        Min Value: -2.830706834793091
-        Value: true
-      Axis: Z
-      Channel Name: curvature
-      Class: rviz/PointCloud2
-      Color: 0; 0; 0
-      Color Transformer: Intensity
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 0; 0; 0
-      Min Color: 255; 255; 255
-      Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.009999999776482582
-      Style: Points
-      Topic: /after_regunfiltered_downsampled
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
     - Alpha: 0.5
       Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
@@ -521,7 +499,7 @@ Visualization Manager:
           Value: false
         - Class: rviz/Marker
           Enabled: false
-          Marker Topic: /submap_normals_downsampled
+          Marker Topic: /normals
           Name: Marker
           Namespaces:
             {}
@@ -555,6 +533,34 @@ Visualization Manager:
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
+        - Alpha: 0.20000000298023224
+          Autocompute Intensity Bounds: true
+          Autocompute Value Bounds:
+            Max Value: 2.128328561782837
+            Min Value: -2.830706834793091
+            Value: true
+          Axis: Z
+          Channel Name: intensity
+          Class: rviz/PointCloud2
+          Color: 0; 0; 0
+          Color Transformer: Intensity
+          Decay Time: 0
+          Enabled: true
+          Invert Rainbow: false
+          Max Color: 0; 0; 0
+          Min Color: 255; 255; 255
+          Name: PointCloud2
+          Position Transformer: XYZ
+          Queue Size: 10
+          Selectable: true
+          Size (Pixels): 3
+          Size (m): 0.009999999776482582
+          Style: Points
+          Topic: /after_regunfiltered
+          Unreliable: false
+          Use Fixed Frame: true
+          Use rainbow: true
+          Value: true
       Enabled: true
       Name: debug
   Enabled: true
@@ -574,7 +580,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 9.493369102478027
+      Distance: 3.3287880420684814
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -582,17 +588,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 4.059455394744873
-        Y: 4.590394496917725
-        Z: -7.547145287389867e-06
+        X: 1.3269355297088623
+        Y: -1.9149198532104492
+        Z: -7.28353143131244e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9997968673706055
+      Pitch: 1.5047963857650757
       Target Frame: <Fixed Frame>
-      Yaw: 4.38164758682251
+      Yaw: 2.7411911487579346
     Saved: ~
 Window Geometry:
   Displays:

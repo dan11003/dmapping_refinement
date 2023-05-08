@@ -9,7 +9,7 @@
 #include "eigen_conversions/eigen_kdl.h"
 #include "tf_conversions/tf_eigen.h"
 #include "dmapping_refinement/cost_function.h"
-#include "dmapping_refinement/d_utils.h"
+#include "dmapping_refinement/dutils.h"
 #include <pcl/filters/normal_refinement.h>
 namespace dmapping {
 

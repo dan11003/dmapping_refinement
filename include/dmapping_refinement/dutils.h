@@ -1,5 +1,7 @@
 #ifndef D_UTILS_H
 #define D_UTILS_H
+
+#include "lio_sam/utility.h"
 #include "lio_sam/generics.h"
 #include "eigen_conversions/eigen_kdl.h"
 #include "tf_conversions/tf_eigen.h"
@@ -8,6 +10,8 @@
 
 
 namespace dmapping{
+
+
 
 
 boost::shared_ptr<PoseGraph> KeyFrameFilter(boost::shared_ptr<PoseGraph> input, const double keyframe_min_transl, const double keyframe_min_rot, const int  max_size = -1);

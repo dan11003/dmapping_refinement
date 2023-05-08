@@ -421,7 +421,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
             cout << "score: " << summary.final_cost / summary.num_residuals << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
         }
-        //cout << summary.FullReport() << endl;
+        cout << summary.FullReport() << endl;
         Visualize("/after_reg");
     }
     solutionPose = poses_;

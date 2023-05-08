@@ -20,6 +20,15 @@ find_package(catkin REQUIRED COMPONENTS
   floam
 )
 
+#add dynamic reconfigure api
+#find_package(catkin REQUIRED dynamic_reconfigure)
+find_package(catkin REQUIRED dynamic_reconfigure)
+
+generate_dynamic_reconfigure_options(
+        cfg/calibParams.cfg
+)
+
+
 find_package(Eigen3)
 if(NOT EIGEN3_FOUND)
   # Fallback to cmake_modules
@@ -41,6 +50,9 @@ if(OPENMP_FOUND)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
+
+
+
 
 include_directories(
   include

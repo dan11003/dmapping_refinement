@@ -14,6 +14,13 @@
     </group>
 
 <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" args="$(find dmapping_refinement)/cfg/calibParams.cfg" />
+
+
+
+<!--
+rosbag play <namn> --clock -r1 --duration=10 -l
+
+-->
     
     
 

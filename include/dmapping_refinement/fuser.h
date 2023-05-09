@@ -43,8 +43,10 @@ public:
       nh.param<int>("/tot_scans", tot_scans, 30);
       nh.param<int>("/submap_size", submap_size, 6);
       nh.param<int>("/submap_history", submap_history, 3);
-      nh.param<bool>("/estimate_velocity", reg_par.estimate_velocity, true);
-      nh.param<bool>("/estimate_rotation", reg_par.estimate_rot_vel, true);
+      nh.param<bool>("/estimate_vel", reg_par.estimate_velocity, true);
+      nh.param<bool>("/estimate_rot_vel", reg_par.estimate_rot_vel, true);
+      nh.param<bool>("/estimate_position", reg_par.estimate_position, true);
+      nh.param<bool>("/estimate_orientation", reg_par.estimate_orientation, true);
       nh.param<float>("/resolution", reg_par.resolution, 0.1);
       nh.param<int>("/max_time", max_time, 0);
       nh.param<int>("/skip_frames", skip_frames, 0);
@@ -63,9 +65,9 @@ public:
 
   // Paremeters
   Parameters par_;
-  boost::shared_ptr<PoseGraph> graph_;
+  boost::shared_ptr<PoseGraph> graph_; // Result stored here
   std::map<int,SurfElCloud> surfels_;
-  std::map<int,NormalCloud::Ptr> surf_;
+  std::map<int,NormalCloud::Ptr> surf_; // will be adjusted
   std::map<int,Eigen::Quaterniond> imu_;
   ros::NodeHandle& nh_;
   ros::Publisher pub, pubDownsampled;
@@ -85,7 +87,7 @@ public:
 
   void Visualize();
 
-  void Save(const std::string& directory);
+  void Save(const std::string& directory, const std::string& prefix, const double resolution = 0.1);
 
 private:
   void GetParameters(std::map<int,NScanRefinement::Pose3d>& parameters);

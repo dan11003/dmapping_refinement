@@ -59,6 +59,8 @@ public:
     bool run_debugger = true;
     std::string constraint_graph_path;
     dmapping::Fuser::Parameters fuserpar;
+    bool save_raw = false;
+    bool save_refined = false;
 
 
     RefinementNode(ros::NodeHandle& handle) : nh(handle) {
@@ -91,12 +93,12 @@ public:
 
         fuserpar.GetParametersFromRos(nh);
         nh.getParam("/directory_output", directory);
+        nh.getParam("/save_raw", save_raw);
+        nh.getParam("/save_refined", save_refined);
+        nh.getParam("/save_refined", save_refined);
         nh.getParam("/output_downsample_size", output_downsample_size);
         nh.getParam("/constraint_graph_path", constraint_graph_path);
         nh.getParam("/debugger", run_debugger);
-        nh.getParam("/export_pcd", export_pcd);
-
-
 
 
         if(!(PoseGraph::LoadGraph(constraint_graph_path+"precompute", graph) || PoseGraph::LoadGraph(constraint_graph_path, graph)) ){
@@ -116,14 +118,15 @@ public:
         cout << "Initialized fuser" << endl;
         if(run_debugger)
             fuser.RunDebugger();
-        else
+        else{
+            if(save_raw){
+                fuser.Save(directory, "raw", output_downsample_size);
+            }
             fuser.RunSubmapFuser();
-        if(export_pcd){
-            cout << "Save" << endl;
-            fuser.Save(directory);
+            if(save_refined){
+                fuser.Save(directory, "refined", output_downsample_size);
+            }
         }
-        else
-            cout << "Do not save" << endl;
 
         ros::Rate r(0.2);
         while(ros::ok()){

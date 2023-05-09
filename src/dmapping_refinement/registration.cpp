@@ -16,7 +16,7 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
         velocities_[idx].p = Eigen::Vector3d(0, 0, 0); // per second
-        angularvelocity_[idx] = Eigen::Vector3d(0, 0, 0); // per second
+        angularvelocity_[idx] = Eigen::Vector3d(0, 0, 0/*10*-3*M_PI/180.0*/); // per second
     }
     // Filter
 
@@ -317,14 +317,14 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     cout << "before solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << " - " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+        cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
     }
 
     Solve(solutionPose, solutionVel);
     cout << "after solver" << endl;
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-        cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << " - " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+        cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
     }
 }
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
@@ -400,14 +400,20 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                     cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(itr->second.p.data());
                     problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
-                    problem.SetParameterBlockConstant(velocities_[idx].p.data());
-                    problem.SetParameterBlockConstant(angularvelocity_[idx].data());
                 }
                 else{
-                    if(!par_.estimate_velocity)
+                    if(!par_.estimate_velocity){
                         problem.SetParameterBlockConstant(velocities_[idx].p.data());
-                    if(!par_.estimate_rot_vel)
+                    }
+                    if(!par_.estimate_rot_vel){
                         problem.SetParameterBlockConstant(angularvelocity_[idx].data());
+                    }
+                    if(!par_.estimate_position){
+                        problem.SetParameterBlockConstant(itr->second.p.data());
+                    }
+                    if(!par_.estimate_orientation){
+                        problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
+                    }
                 }
 
             }

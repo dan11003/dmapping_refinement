@@ -123,16 +123,35 @@ void Fuser::Visualize(){
 }
 
 
-void Fuser::Save(const std::string& directory){
+void Fuser::Save(const std::string& directory, const std::string& prefix, const  double resolution){
     std::map<int,NScanRefinement::Pose3d> parameters;
     GetParameters(parameters);
     cout << "Saving: " << parameters.size() << " to " << directory << endl;
+    NormalCloud::Ptr merged(new NormalCloud());
+    NormalCloud::Ptr mergedDownsampled(new NormalCloud());
     for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
         const int idx = itr->first;
-        NormalCloud::Ptr tmp_0(new NormalCloud());
-        pcl::transformPointCloud(*surf_[idx], *tmp_0, itr->second.T.matrix());
-        const std::string filename =  directory + std::to_string(idx) + ".pcd";
-        pcl::io::savePCDFileBinary(filename, *tmp_0);
+        NormalCloud::Ptr tmp(new NormalCloud());
+        pcl::transformPointCloud(*surf_[idx], *tmp, itr->second.T.matrix());
+        *merged += *tmp;
+        //const s   td::string filename =  directory + prefix + std::to_string(idx) + ".pcd";
+    }
+    pcl::VoxelGrid<pcl::PointXYZINormal> sor;
+    sor.setMinimumPointsNumberPerVoxel(2);
+    sor.setInputCloud(merged);
+    sor.setLeafSize (resolution, resolution, resolution);
+    sor.filter (*mergedDownsampled);
+
+
+    if(!merged->empty()){
+        cout << "Saving full pointcloud" << endl;
+        const std::string filename =  directory + prefix + ".pcd";
+        pcl::io::savePCDFileBinary(filename, *merged);
+    }
+    if(!mergedDownsampled->empty()){
+        cout << "Saving downsampled pointcloud" << endl;
+        const std::string filename =  directory + prefix + "_downsample_"+ ".pcd";
+        pcl::io::savePCDFileBinary(filename, *mergedDownsampled);
     }
     cout << "Saving finished" << endl;
 }

@@ -34,6 +34,8 @@ public:
     float resolution = 0.1;
     bool estimate_velocity = true;
     bool estimate_rot_vel = true;
+    bool estimate_position = true;
+    bool estimate_orientation = true;
 
     //std::string toString() {return}
   };

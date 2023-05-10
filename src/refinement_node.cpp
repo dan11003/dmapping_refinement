@@ -144,7 +144,6 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "refinement");
     ros::NodeHandle nh("~");
     RefinementNode node(nh);
-    ros::spin();
 
     return 0;
 }

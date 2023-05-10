@@ -4,6 +4,8 @@
 #include "odomEstimationClass.h"
 #include "dmapping_refinement/registration.h"
 #include <cstdlib>
+#include "utils.h"
+
 
 
 namespace dmapping{
@@ -86,6 +88,8 @@ public:
   void RunDebugger();
 
   void Visualize();
+
+  void Align();
 
   void Save(const std::string& directory, const std::string& prefix, const double resolution = 0.1);
 

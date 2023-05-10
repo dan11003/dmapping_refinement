@@ -315,16 +315,19 @@ void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr)
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel, const std::map<int,bool>& locked){
     locked_ = locked;
     cout << "before solver" << endl;
-    for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-        cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+    if(par_.debug){
+        for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+            //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+        }
     }
 
     Solve(solutionPose, solutionVel);
-    cout << "after solver" << endl;
-    for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-        cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+    if(par_.debug){
+        for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
+            //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+        }
     }
 }
 void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
@@ -347,17 +350,17 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         //cout <<"scan pairs: " << scan_pairs.size() << endl;
         std::vector<Correspondance> correspondances;
-        #pragma omp parallel num_threads (12)
+#pragma omp parallel num_threads (12)
         {
-            #pragma omp single
+#pragma omp single
             {
                 //for (auto&& pair : scan_pairs) {
                 for (int i = 0 ; i < scan_pairs.size() ; i++) {
-                    #pragma omp task
+#pragma omp task
                     {
                         const std::vector<Correspondance> tmp_corr = FindCorrespondences(scan_pairs[i].first, scan_pairs[i].second);
                         //cout << "FindCorrespondences: " << scan_i << "," << scan_j <<", size: " << tmp_corr.size() << endl;
-                        #pragma omp critical
+#pragma omp critical
                         {
                             correspondances.insert(correspondances.end(), tmp_corr.begin(), tmp_corr.end());
                         }
@@ -427,7 +430,9 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
             cout << "score: " << summary.final_cost / summary.num_residuals << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
         }
-        cout << summary.FullReport() << endl;
+        if(par_.debug){
+            cout << summary.FullReport() << endl;
+        }
         Visualize("/after_reg");
     }
     solutionPose = poses_;

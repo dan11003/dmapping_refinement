@@ -50,7 +50,7 @@ struct planarCostFunction{
 
     // Factory to hide the construction of the CostFunction object from the client code.
     static ceres::CostFunction* Create(const Eigen::Vector3d& nor) {
-        return (new ceres::AutoDiffCostFunction<planarCostFunction, 1, 4>(new planarCostFunction(nor)));
+        return (new ceres::AutoDiffCostFunction<planarCostFunction, 2, 4>(new planarCostFunction(nor)));
     }
 
     template <typename T>
@@ -58,15 +58,27 @@ struct planarCostFunction{
 
         const Eigen::Quaternion<T> q(camera_rot);
         const Eigen::Matrix<T,3,1> normalTransformed = q*normal_.cast<T>();
-        Eigen::Matrix<T,3,1> groundNormal;
-        groundNormal << T(0.0),T(0.0),T(1.0);
-        const T sim = normalTransformed.dot(groundNormal);
+        Eigen::Matrix<T,3,1> groundNormalZ;
+        groundNormalZ << T(0.0),T(0.0),T(1.0);
+        Eigen::Matrix<T,3,1> groundNormalX;
+        groundNormalX << T(1.0),T(0.0),T(0.0);
+
+        const T simZ = normalTransformed.dot(groundNormalZ);
+        const T simX = normalTransformed.dot(groundNormalX);
         const T dot45Deg(0.707);
-        if(sim > dot45Deg){
-          residuals[0] = T(1.0) - sim; // ground or ceiling observation -  want to maximize similarity
+
+        if(simZ > dot45Deg){
+          residuals[0] = T(1.0) - simZ; // ground or ceiling observation -  want to maximize similarity
         }
         else{
-          residuals[0] = sim; // Wall observation - want to minimize similarity
+          residuals[0] = simZ; // Wall observation - want to minimize similarity
+        }
+
+        if(simX > dot45Deg){
+          residuals[1] = T(1.0) - simX; // ground or ceiling observation -  want to maximize similarity
+        }
+        else{
+          residuals[1] = simX; // Wall observation - want to minimize similarity
         }
 
         return true;

@@ -36,6 +36,7 @@ public:
     bool estimate_rot_vel = true;
     bool estimate_position = true;
     bool estimate_orientation = true;
+    bool debug = false;
 
     //std::string toString() {return}
   };

@@ -23,6 +23,7 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     graph_->AddConstraint(Tdiff, idx, nextIdx);
   }
   pub = nh_.advertise<visualization_msgs::Marker>("/submap_normals",100);
+  //pubAfterRefinement = nh_.advertise<pcl::PointCloud<pcl::PointXYZINormal> >("/after refinement",100);
   pubDownsampled = nh_.advertise<visualization_msgs::Marker>("/submap_normals_downsampled",100);
 
   // Filter point clouds
@@ -71,23 +72,54 @@ void Fuser::Align(){
   ceres::Problem problem;
   ceres::LossFunction* loss = new ceres::CauchyLoss(0.01);
 
-  NormalCloud::Ptr merged(new NormalCloud());
+  NormalCloud::Ptr mergedSurf(new NormalCloud());
   NormalCloud::Ptr mergedLocal(new NormalCloud());
-  for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
+  NormalCloud::Ptr mergedAligned(new NormalCloud());
+  for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end() ; itr++){
     const int idx = itr->first;
     NormalCloud::Ptr tmp(new NormalCloud());
     pcl::transformPointCloud(*surf_[idx], *tmp, itr->second.T.matrix());
-    *merged += *tmp;
+    *mergedSurf += *tmp;
   }
-  const Eigen::Isometry3d poseFirstInv = graph_->nodes.begin()->second.T.inverse();
-  Eigen::Quaterniond q(poseFirstInv.linear());
-  pcl::transformPointCloud(*merged, *mergedLocal, poseFirstInv.matrix());
-  for(auto && p : mergedLocal->points){
+
+  const Eigen::Affine3d poseFirst(graph_->nodes.begin()->second.T.matrix());
+  Eigen::AngleAxisd rotBefore(poseFirst.linear());
+  cout << "pose: " << poseFirst.translation().transpose() << " - " << rotBefore.axis().transpose()*rotBefore.angle() << endl;
+  pcl::transformPointCloud(*mergedSurf, *mergedLocal, poseFirst.inverse());
+
+  NormalCloud::Ptr mergedLocalDownsampled(new NormalCloud());
+  pcl::VoxelGrid<pcl::PointXYZINormal> sor;
+  sor.setMinimumPointsNumberPerVoxel(2);
+  sor.setInputCloud(mergedLocal);
+  sor.setLeafSize (0.02, 0.1, 0.1);
+  sor.filter (*mergedLocalDownsampled);
+
+  PublishCloud("/AfterAlignment", *mergedLocalDownsampled, "world", "sensorBefore", poseFirst, ros::Time::now(), nh_);
+
+  Eigen::Quaterniond q(poseFirst.linear());
+
+  for(auto && p : mergedLocalDownsampled->points){
     const Eigen::Vector3d normal(p.normal_x, p.normal_y, p.normal_z);
     ceres::CostFunction* cost_function = planarCostFunction::Create(normal);
-    problem->AddResidualBlock(cost_function, nullptr, q.coeffs().data());
+    problem.AddResidualBlock(cost_function, loss, q.coeffs().data());
   }
+  ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
+  problem.SetParameterization(q.coeffs().data(), quaternion_local_parameterization);
+
   ceres::Solve(options, &problem, &summary);
+  Eigen::Affine3d poseAfter(EigenCombine(q, poseFirst.translation()).matrix());
+  Eigen::AngleAxisd rotAfter(poseFirst.linear());
+
+
+
+  PublishCloud("/AfterAlignment", *mergedLocalDownsampled, "world", "sensorAfter", poseAfter, ros::Time::now(), nh_);
+  mergedLocalDownsampled->header.frame_id = "sensorAfter";
+  std::map<int,NormalCloud::Ptr> cldMap = {{0,mergedLocalDownsampled}};
+  VisualizePointCloudNormal(cldMap, "submapDownsampled", pubDownsampled);
+
+  cout << "pose: " << poseFirst.translation().transpose() << " - " << rotAfter.axis().transpose()*rotAfter.angle() << endl;
+
+
 
 
   if(!summary.IsSolutionUsable()){
@@ -162,17 +194,40 @@ void Fuser::Visualize(){
 
 
 void Fuser::Save(const std::string& directory, const std::string& prefix, const  double resolution){
+
+  const std::string singleCloudsDir = directory + "/export/" + prefix;
+  boost::filesystem::create_directories(singleCloudsDir);
   std::map<int,NScanRefinement::Pose3d> parameters;
   GetParameters(parameters);
   cout << "Saving: " << parameters.size() << " to " << directory << endl;
   NormalCloud::Ptr merged(new NormalCloud());
+
+  std::vector<Eigen::Affine3d> poses;
+  //std::vector<double> stamps;
+  std::ofstream data_ofs(singleCloudsDir + "/odom.poses");
+  for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
+
+      Eigen::Matrix<double,4,4> mat = itr->second.T.matrix();
+      data_ofs << itr->first << std::endl;
+      data_ofs << mat(0,0) << " " << mat(0,1) << " " << mat(0,2) << " " << mat(0,3) << std::endl;
+      data_ofs << mat(1,0) << " " << mat(1,1) << " " << mat(1,2) << " " << mat(1,3) << std::endl;
+      data_ofs << mat(2,0) << " " << mat(2,1) << " " << mat(2,2) << " " << mat(2,3) << std::endl;
+      data_ofs << mat(3,0) << " " << mat(3,1) << " " << mat(3,2) << " " << mat(3,3) << std::endl;
+      //stamps.push_back(pcl_conversions::fromPCL(itr->second.segmented_scans.front()->header.stamp).toSec());
+  }
+  data_ofs.close();
+  //SaveOdom(singleCloudsDir, poses, stamps, std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr>());
+
+
   NormalCloud::Ptr mergedDownsampled(new NormalCloud());
   for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
     const int idx = itr->first;
     NormalCloud::Ptr tmp(new NormalCloud());
     pcl::transformPointCloud(*surf_[idx], *tmp, itr->second.T.matrix());
     *merged += *tmp;
-    //const s   td::string filename =  directory + prefix + std::to_string(idx) + ".pcd";
+    const std::string filename =  singleCloudsDir + "/" + prefix +"_" + std::to_string(idx) + ".pcd";
+    pcl::io::savePCDFileBinary(filename, *tmp);
+
   }
   pcl::VoxelGrid<pcl::PointXYZINormal> sor;
   sor.setMinimumPointsNumberPerVoxel(2);
@@ -206,15 +261,17 @@ void Fuser::RunDebugger(){
     cout << "(r)egister, (s)tatus, (v)isualize, <number> set start, (e)xit" << endl;
     std::cin.clear();
     std::cin >> input;
-    bool register_scans = false;
+    bool register_scans = false, align = false;
+
     long value = std::strtol(input.c_str(), &endp, 10);
-    cout << "(r)egister, (v)isualize, <number> skip to" << endl;
+    cout << "(a)lign, (r)egister, (v)isualize, <number> skip to" << endl;
 
     if(input =="r"){ cout << "(r)egister" << endl;       register_scans = true; }
-    if(input =="e"){cout << "(e)xit" << endl; exit(0); }
+    else if(input =="a"){ cout << "(a)lign" << endl; align = true; }
+    else if(input =="e"){cout << "(e)xit" << endl; exit(0); }
     else if(input =="v"){ cout << "(v)isualize" << endl; Visualize(); }
-    else if (endp == input.c_str()) { cout << "conversion failed completely, value is 0, endp points to start of given string " << endl; }
-    else if (*endp != 0) { cout <<" got value, but entire string was not valid number, endp points to first invalid character " << endl; }
+    else if (endp == input.c_str()) { /*cout << "conversion failed completely, value is 0, endp points to start of given string " << endl; */}
+    else if (*endp != 0) {/* cout <<" got value, but entire string was not valid number, endp points to first invalid character " << endl; */}
     else {
       if( graph_->nodes.find(value) != graph_->nodes.end()  ){
         start = value;
@@ -225,7 +282,10 @@ void Fuser::RunDebugger(){
         cout << "index out of range " << endl;
       }
     }
-    if(register_scans){
+    if(align){
+     Align();
+    }
+    else if(register_scans){
       cout << "Register" << endl;
       std::map<int,bool> submapLock;
       auto itrFirst = graph_->nodes.find(start);

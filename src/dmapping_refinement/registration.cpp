@@ -5,7 +5,7 @@ namespace dmapping {
 NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& poses, std::map<int,NormalCloud::Ptr>& surf, std::map<int,Eigen::Quaterniond>& imu, ros::NodeHandle& nh) : par_(par), poses_(poses), surf_(surf), imu_(imu), nh_(nh){
     //loss_function = new ceres::HuberLoss(0.1); //= ceres::DENSE_QR;
     options.max_num_iterations = par_.inner_iterations;
-    options.minimizer_progress_to_stdout = true;
+    options.minimizer_progress_to_stdout = par_.debug ? true:false;
     options.num_threads = 12;
     vis_pub = nh_.advertise<visualization_msgs::Marker>("/correspondances",100);
     normal_pub = nh_.advertise<visualization_msgs::Marker>("/normals",100);
@@ -44,7 +44,8 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
             }
             filestream.close();
         }*/
-        cout <<"Downsampling rate: " << (double)filtered_[idx]->size() / surf_[idx]->size()  << endl;
+        if(par_.debug)
+            cout <<"Downsampling rate: " << (double)filtered_[idx]->size() / surf_[idx]->size()  << endl;
     }
 }
 
@@ -318,7 +319,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     if(par_.debug){
         for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-            cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
         }
     }
 
@@ -326,7 +327,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     if(par_.debug){
         for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-            cout << std::fixed << std::setprecision(2) << "idx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
         }
     }
 }
@@ -345,7 +346,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
 
     for (int i = 0; i < par_.outer_iterations ; i++) {
         ceres::Problem problem;
-        cout << "Compute correspondance" << endl;
+        cout << "\tCompute correspondance" << endl;
         TransformCommonFrame(filtered_, transformed_, true);
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         //cout <<"scan pairs: " << scan_pairs.size() << endl;
@@ -400,9 +401,11 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                 ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();
                 problem.SetParameterization(itr->second.q.coeffs().data(), quaternion_local_parameterization);
                 if(locked_[idx]){
-                    cout << "lock: " << idx << endl;
+                    //cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(itr->second.p.data());
                     problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
+                    problem.SetParameterBlockConstant(velocities_[idx].p.data());
+                    problem.SetParameterBlockConstant(angularvelocity_[idx].data());
                 }
                 else{
                     if(!par_.estimate_velocity){
@@ -420,14 +423,14 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                 }
 
             }
-            cout << "Minimize" << endl;
+            cout << "\tMinimize" << endl;
             ceres::Solve(options, &problem, &summary);
-            cout << "solved" << endl;
+            cout << "\tsolved" << endl;
             if(!summary.IsSolutionUsable()){
                 cout << "ERROR NOT USABLE" << endl;
                 exit(0);
             }
-            cout << "score: " << summary.final_cost / summary.num_residuals << endl;
+            cout << "\tscore: " << summary.final_cost / summary.num_residuals << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
         }
         if(par_.debug){

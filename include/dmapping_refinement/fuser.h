@@ -16,9 +16,11 @@ public:
 
   struct Parameters
   {
-    double keyframe_min_transl;
+    double keyframe_min_transl; // Change name of these please
     double keyframe_min_rot;
     bool use_keyframe;
+    double minDistanceKeyframe = 0.2;  // m /s
+
     double min_dist_association_factor;
     lidar::Lidar lidar_param;
     NScanRefinement::Parameters reg_par;
@@ -27,6 +29,8 @@ public:
     int skip_frames;
     int max_time = 60;
     int submap_history;
+
+
 
 
     void GetParametersFromRos(ros::NodeHandle& nh){

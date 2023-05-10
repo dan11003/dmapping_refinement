@@ -39,6 +39,42 @@ struct PointToPlaneErrorGlobal{
 };
 
 
+struct planarCostFunction{
+
+    const Eigen::Vector3d normal_;
+
+    planarCostFunction(const Eigen::Vector3d& nor) :normal_(nor)
+    {
+//        cout<<nor.dot(nor)<<endl;
+    }
+
+    // Factory to hide the construction of the CostFunction object from the client code.
+    static ceres::CostFunction* Create(const Eigen::Vector3d& nor) {
+        return (new ceres::AutoDiffCostFunction<planarCostFunction, 1, 4>(new planarCostFunction(nor)));
+    }
+
+    template <typename T>
+    bool operator()(const T* const camera_rot, T* residuals) const {
+
+        const Eigen::Quaternion<T> q(camera_rot);
+        const Eigen::Matrix<T,3,1> normalTransformed = q*normal_.cast<T>();
+        Eigen::Matrix<T,3,1> groundNormal;
+        groundNormal << T(0.0),T(0.0),T(1.0);
+        const T sim = normalTransformed.dot(groundNormal);
+        const T dot45Deg(0.707);
+        if(sim > dot45Deg){
+          residuals[0] = T(1.0) - sim; // ground or ceiling observation -  want to maximize similarity
+        }
+        else{
+          residuals[0] = sim; // Wall observation - want to minimize similarity
+        }
+
+        return true;
+    }
+};
+
+
+
 
 struct PointToPlaneErrorGlobalP2P{
 

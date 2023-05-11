@@ -3,19 +3,23 @@
 
     <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Thu_2023.05.11_14:10:07/graph.pg" />
     <!--arg name="slam_param_file" default="$(find lio_sam)/config/params_structor_outdoor.yaml" /-->
-    <param name="keyframe_min_transl" type="double" value="0.5" /> <!-- 0.05 -->
-    <param name="keyframe_min_rot" type="double" value="5" /> <!-- 0.035 -->
-    <param name="use_keyframe" type="bool" value="false" />
+    <param name="keyframe_min_transl" type="double" value="0.05" /> <!-- 0.05 -->
+    <param name="keyframe_min_rot" type="double" value="1" /> <!-- 0.035 -->
+    <param name="use_keyframe" type="bool" value="true" />
     <param name="inner_iterations" type="double" value="5" />
     <param name="outer_iterations" type="double" value="5" />
     <param name="max_dist_association" type="double" value="1.0" />
     <param name="tot_scans" type="double" value="0" />
-    <param name="resolution" type="double" value="0.1" />
-    <param name="debugger" type="bool" value="true" />
+    <param name="resolution" type="double" value="0.07" />
+
     <param name="estimate_vel" type="bool" value="true" />
     <param name="estimate_rot_vel" type="bool" value="true" />
     <param name="estimate_position" type="bool" value="true" />
     <param name="estimate_orientation" type="bool" value="true" />
+    <param name="submap_size" type="double" value="10" /> <!-- adjusted to closest even number -->
+    <param name="submap_history" type="int" value="5" />
+
+    <param name="debugger" type="bool" value="false" />
     <param name="skip_frames" type="int" value="1" />
 
 
@@ -27,8 +31,7 @@
 
     <!--param name="max_time" type="int" value="100" /-->
 
-    <param name="submap_size" type="double" value="20" /> <!-- adjusted to closest even number -->
-    <param name="submap_history" type="int" value="5" />
+
 
 
 

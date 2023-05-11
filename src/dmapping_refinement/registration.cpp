@@ -15,20 +15,12 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
     // Initialize
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
-        velocities_[idx].p = Eigen::Vector3d(0, 0, 0); // per second
+        velocities_[idx] = Eigen::Vector3d(0, 0, 0); // per second
         angularvelocity_[idx] = Eigen::Vector3d(0, 0, 0/*10*-3*M_PI/180.0*/); // per second
     }
     // Filter
 
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
-        /*if(itr == poses_.begin()){
-            std::fstream filestream("/home/daniel/Documents/before.dat", std::ios::out);
-            NormalCloud::Ptr cld = surf_.begin()->second;
-            for( int i = 0 ; i < cld->points.size() ; i++){
-                filestream << cld->points[i].curvature << endl;
-            }
-            filestream.close();
-        }*/
         const int idx = itr->first;
         filtered_[idx] = NormalCloud().makeShared();
         pcl::VoxelGrid<pcl::PointXYZINormal> sor;
@@ -164,7 +156,7 @@ void NScanRefinement::GetPointCloudsSurfTransformed(std::map<int,NormalCloud::Pt
     TransformCommonFrame(surf_, output, false);
 }
 
-void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::Vector3d& rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
+void NonRigidTransform(const Eigen::Vector3d& vel, const Eigen::Vector3d& rotVel, const NScanRefinement::Pose3d& pose, const NormalCloud::Ptr& input, NormalCloud::Ptr& output ){
     NormalCloud::Ptr tmp = NormalCloud().makeShared();
     const Eigen::Vector3d& t = pose.p;
 
@@ -173,7 +165,7 @@ void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::Vector3d
         const double time = input->points[i].curvature;
         const auto pnt = (input->points[i]);
         const Eigen::Vector3d p = Eigen::Vector3d(pnt.x, pnt.y, pnt.z);
-        const Eigen::Vector3d v_comp = vel.p*time;
+        const Eigen::Vector3d v_comp = vel*time;
         //const Eigen::Quaterniond rotComp(Eigen::AngleAxisd (rotNorm, rotAxis));
         const Eigen::Vector3d rotCompVec = rotVel*time;
         Eigen::Matrix3d rotCompMat;
@@ -194,7 +186,7 @@ void NScanRefinement::TransformCommonFrame(const std::map<int,NormalCloud::Ptr>&
     for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
         const int idx = itr->first;
         NormalCloud::Ptr transformed = NormalCloud().makeShared();
-        const Pose3d& vel = velocities_.at(idx);
+        const Eigen::Vector3d& vel = velocities_.at(idx);
         const Eigen::Vector3d rotAxis = angularvelocity_.at(idx);
 
         const Pose3d& pose = poses_.at(idx);
@@ -269,8 +261,8 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
             poses_[c.src_scan].p.data(),
             poses_[c.target_scan].q.coeffs().data(),
             poses_[c.target_scan].p.data(),
-            velocities_[c.src_scan].p.data(),
-            velocities_[c.target_scan].p.data(),
+            velocities_[c.src_scan].data(),
+            velocities_[c.target_scan].data(),
             angularvelocity_[c.src_scan].data(),
             angularvelocity_[c.target_scan].data());
 
@@ -316,25 +308,29 @@ void NScanRefinement::VisualizeCorrespondance(std::vector<Correspondance>& corr)
     problem->AddResidualBlock(cost_function, nullptr, pose_q.coeffs().data());
 }*/
 
-void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel, const std::map<int,bool>& locked){
+void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Eigen::Vector3d>& solutionVel, std::map<int,Eigen::Vector3d>& solutionAngVel, const std::map<int,bool>& locked){
     locked_ = locked;
     cout << "before solver" << endl;
     if(par_.debug){
         for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
         }
     }
 
-    Solve(solutionPose, solutionVel);
+    Solve(solutionPose, solutionVel, solutionAngVel);
     if(par_.debug){
         for(auto itr = poses_.begin() ; itr != poses_.end() ; itr++){
             //cout <<"idx: " << itr->first << ", pos: " << itr->second.p.transpose() << ", lock: " << locked_[itr->first] << endl;
-            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].p.transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
+            cout << std::fixed << std::setprecision(2) << "\tidx: " << itr->first << ", pos: " << itr->second.p.transpose() <<", Theta " << itr->second.q.coeffs().transpose() <<", v: " << velocities_[itr->first].transpose() <<", w: " << angularvelocity_[itr->first].transpose() << endl; //", lock: " << locked_[itr->first] << endl;
         }
     }
 }
-void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pose3d>& solutionVel){
+void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Eigen::Vector3d>& solutionVel, std::map<int,Eigen::Vector3d>& solutionAngVel){
+
+    for(auto && [idx,pose] : poses_){
+        pose.q.normalize();
+    }
 
     if(locked_.size() != poses_.size()){
         cout << "Unlock poses " << endl;
@@ -404,12 +400,12 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                     //cout << "lock: " << idx << endl;
                     problem.SetParameterBlockConstant(itr->second.p.data());
                     problem.SetParameterBlockConstant(itr->second.q.coeffs().data());
-                    problem.SetParameterBlockConstant(velocities_[idx].p.data());
+                    problem.SetParameterBlockConstant(velocities_[idx].data());
                     problem.SetParameterBlockConstant(angularvelocity_[idx].data());
                 }
                 else{
                     if(!par_.estimate_velocity){
-                        problem.SetParameterBlockConstant(velocities_[idx].p.data());
+                        problem.SetParameterBlockConstant(velocities_[idx].data());
                     }
                     if(!par_.estimate_rot_vel){
                         problem.SetParameterBlockConstant(angularvelocity_[idx].data());
@@ -441,6 +437,7 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
     }
     solutionPose = poses_;
     solutionVel = velocities_;
+    solutionAngVel = angularvelocity_;
     /*for(auto itr = poses_.begin() ; itr != std::prev(poses_.end()); itr++){
         cout << itr->first << " : " << itr->second.p.transpose() << endl;
     }*/

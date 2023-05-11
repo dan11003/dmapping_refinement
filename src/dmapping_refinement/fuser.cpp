@@ -214,7 +214,9 @@ void Fuser::Save(const std::string& directory, const std::string& prefix, const 
     std::vector<Eigen::Affine3d> poses;
     //std::vector<double> stamps;
     std::ofstream data_ofs(singleCloudsDir + "/odom.poses");
-    for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
+    auto first = (graph_->nodes.find(par_.skip_frames) != graph_->nodes.end()) ? graph_->nodes.find(par_.skip_frames) : graph_->nodes.begin();
+
+    for(auto itr = first ; itr != graph_->nodes.end(); itr++){
 
         Eigen::Matrix<double,4,4> mat = itr->second.T.matrix();
         data_ofs << itr->first << std::endl;
@@ -229,7 +231,7 @@ void Fuser::Save(const std::string& directory, const std::string& prefix, const 
 
 
     NormalCloud::Ptr mergedDownsampled(new NormalCloud());
-    for(auto itr = graph_->nodes.begin() ; itr != graph_->nodes.end(); itr++){
+    for(auto itr = first ; itr != graph_->nodes.end(); itr++){
         const int idx = itr->first;
         NormalCloud::Ptr tmp(new NormalCloud());
         pcl::transformPointCloud(*surf_[idx], *tmp, itr->second.T.matrix());
@@ -301,13 +303,14 @@ void Fuser::RunDebugger(){
             for(auto itr = itrFirst ;  std::distance(itrFirst,itr)  < graph_->nodes.size() && std::distance(itrFirst,itr) < par_.submap_size ; itr++ ){
                 submapLock[itr->first] = (itr == itrFirst); // first true else false
             }
-            std::map<int,NScanRefinement::Pose3d> posePar, velPar;
+            std::map<int,NScanRefinement::Pose3d> posePar;
+            std::map<int,Eigen::Vector3d> velPar, angVelPar;
             for(auto && [index,lock] : submapLock){
                 posePar[index] = ToPose3d(graph_->nodes[index].T);
             }
             cout << "Coarse registration" << endl;
             NScanRefinement reg(par_.reg_par, posePar, surf_, imu_, nh_);
-            reg.Solve(posePar, velPar, submapLock);
+            reg.Solve(posePar, velPar, angVelPar, submapLock);
 
             std::map<int,NormalCloud::Ptr> output;
             NormalCloud::Ptr mergedPrev(new NormalCloud());
@@ -395,7 +398,8 @@ void Fuser::Run(){
     cout << "submap partition" << endl;
     std::vector<std::map<int,bool>> submaps = DivideSubmap();
     for (auto&& submap : submaps) {
-        std::map<int,NScanRefinement::Pose3d> posePar, velPar;
+        std::map<int,NScanRefinement::Pose3d> posePar;
+        std::map<int,Eigen::Vector3d> velPar, angVelPar;
 
         for (auto itr = submap.begin() ; itr != submap.end() ; itr++) {
             const int currIdx = itr->first;
@@ -419,7 +423,7 @@ void Fuser::Run(){
         }
         cout << endl;
         NScanRefinement reg(par_.reg_par, posePar, surf_, imu_, nh_);
-        reg.Solve(posePar, velPar, submap);
+        reg.Solve(posePar, velPar, angVelPar, submap);
         SetParameters(posePar);
         double timeElapsed = (ros::Time::now() - t0).toSec();
         cout << "Elapsed: " << timeElapsed << endl;
@@ -450,7 +454,9 @@ void Fuser::RunSubmapFuser(){
     bool firstSubmap = true;
     std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
     for (auto submapItr = submaps.begin() ; submapItr != submaps.end() ; submapItr++ ) {
-        std::map<int,NScanRefinement::Pose3d> posePar, velPar;
+        std::map<int,NScanRefinement::Pose3d> posePar;
+        std::map<int,Eigen::Vector3d> velPar, angVelPar;
+
         if(!ros::ok())
             return;
 
@@ -462,19 +468,14 @@ void Fuser::RunSubmapFuser(){
         for (auto scanItr = submapItr->begin() ; scanItr != submapItr->end() ; scanItr++) {
             const int currIdx = scanItr->first;
             if(firstSubmap){ // lock the very first node only
-              cout << "first submap" << endl;
                 posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly from graph
                 firstSubmap = false;
             }
             else if(scanItr == submapItr->begin()){  // if first in the submap but not in first node,
-              cout << "first scan - not first submap" << endl;
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(idxScanLast,currIdx)]; // we use odometry prediciton stored in the constraints...
-                cout << "inc: " << inc.translation().transpose() << endl;
-                cout << "last submap pos: " << inc.translation().transpose() << endl;
                 posePar[currIdx] = ToPose3d(graph_->nodes[idxScanLast].T*inc); //... to predict the current pose
             }
             else{ //use the posePar vector as well as graph constraints
-                cout << "Anywhere" << endl;
                 const int prevIdx = std::prev(scanItr)->first;
                 const Eigen::Isometry3d prev = ToIsometry3d(posePar[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
@@ -492,7 +493,7 @@ void Fuser::RunSubmapFuser(){
         }
 
         NScanRefinement reg(par_.reg_par, posePar, surfWithKeyFrame, imu_, nh_);
-        reg.Solve(posePar, velPar, submapWithKeyFrames);
+        reg.Solve(posePar, velPar, angVelPar, submapWithKeyFrames);
 
 
         NormalCloud::Ptr aggregated = NormalCloud().makeShared();
@@ -514,12 +515,11 @@ void Fuser::RunSubmapFuser(){
               cout << "Do not fuse" << endl;
             }
             //cout << "Sufficient movement - scan fused, movement:  " <<(keyframesHistory.back().pose.inverse()*poseScanLast).translation().norm() << endl;
-
         }
 
 
         for(auto && [idx,lock] : (*submapItr)){ // apply non-rigid transformation and concatinate scans into local frame, do only for scans, not previous keyframes
-            NonRigidTransform(velPar[idx], {0,0,0}, NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered
+            NonRigidTransform(velPar[idx], angVelPar[idx], NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered
             NormalCloud::Ptr tmp = NormalCloud().makeShared();
             pcl::transformPointCloudWithNormals(*surf_[idx], *tmp, (poseScanLast.inverse()*ToIsometry3d(posePar[idx])).matrix()); //Transform to local frame of SubmapLas
             *aggregated += *tmp;

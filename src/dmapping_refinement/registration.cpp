@@ -351,17 +351,17 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         //cout <<"scan pairs: " << scan_pairs.size() << endl;
         std::vector<Correspondance> correspondances;
-#pragma omp parallel num_threads (12)
+        #pragma omp parallel num_threads (12)
         {
-#pragma omp single
+            #pragma omp single
             {
                 //for (auto&& pair : scan_pairs) {
                 for (int i = 0 ; i < scan_pairs.size() ; i++) {
-#pragma omp task
+                    #pragma omp task
                     {
                         const std::vector<Correspondance> tmp_corr = FindCorrespondences(scan_pairs[i].first, scan_pairs[i].second);
                         //cout << "FindCorrespondences: " << scan_i << "," << scan_j <<", size: " << tmp_corr.size() << endl;
-#pragma omp critical
+                        #pragma omp critical
                         {
                             correspondances.insert(correspondances.end(), tmp_corr.begin(), tmp_corr.end());
                         }
@@ -381,9 +381,8 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
         for(auto && c : correspondances){
             addSurfCostFactor(c, problem);
         }
-        float corr_per_scan = (double)correspondances.size() / (double)poses_.size();
+        //float corr_per_scan = (double)correspondances.size() / (double)poses_.size();
         //cout << "corr_per_scan: " << corr_per_scan << ", correspondances: " <<   correspondances.size() << endl;
-
         /*for(auto itr = poses_.begin() ; itr != std::prev(poses_.end()); itr++){
             const int idx_now = itr->first;
             const int idx_next = std::next(itr)->first;
@@ -393,9 +392,6 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
         }*/
 
         if(!correspondances.empty()){
-            auto pose_first_iter = poses_.begin();
-
-
             for(auto itr = poses_.begin() ; itr != poses_.end(); itr++){
                 const int idx = itr->first;
                 ceres::LocalParameterization* quaternion_local_parameterization = new ceres::EigenQuaternionParameterization();

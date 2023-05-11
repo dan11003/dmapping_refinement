@@ -11,6 +11,12 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     else{
         graph_ = graph;
     }
+    for(auto && node : graph_->nodes){
+      Eigen::Quaterniond q(node.second.T.linear());
+      q.normalize();
+      node.second.T = EigenCombine(q,node.second.T.translation());
+    }
+
     for (auto& [index, surfel]: graph_->surfels_){
         surf_[index] = surfel.GetPointCloud();
         imu_[index] = graph_->nodes[index].imu;
@@ -19,7 +25,10 @@ Fuser::Fuser(Parameters& par, boost::shared_ptr<PoseGraph> graph, ros::NodeHandl
     for(auto itr = graph_->nodes.begin() ; std::next(itr) != graph_->nodes.end() ; itr++ ){
         const int idx = itr->first;
         const int nextIdx = std::next(itr)->first;
-        const Eigen::Isometry3d Tdiff = graph_->nodes[idx].T.inverse()*graph_->nodes[nextIdx].T;
+        Eigen::Isometry3d Tdiff = graph_->nodes[idx].T.inverse()*graph_->nodes[nextIdx].T;
+        Eigen::Quaterniond q(Tdiff.linear());
+        q.normalize();
+        Tdiff = EigenCombine(q, Tdiff.translation());
         graph_->AddConstraint(Tdiff, idx, nextIdx);
     }
     pub = nh_.advertise<visualization_msgs::Marker>("/submap_normals",100);
@@ -439,7 +448,6 @@ void Fuser::RunSubmapFuser(){
     Eigen::Isometry3d poseScanLast = Eigen::Isometry3d::Identity();
     int idxScanLast;
     bool firstSubmap = true;
-    int frameNr = 0;
     std::vector<std::map<int,bool>> submaps = DivideSubmapNoOverlap();
     for (auto submapItr = submaps.begin() ; submapItr != submaps.end() ; submapItr++ ) {
         std::map<int,NScanRefinement::Pose3d> posePar, velPar;
@@ -454,13 +462,19 @@ void Fuser::RunSubmapFuser(){
         for (auto scanItr = submapItr->begin() ; scanItr != submapItr->end() ; scanItr++) {
             const int currIdx = scanItr->first;
             if(firstSubmap){ // lock the very first node only
+              cout << "first submap" << endl;
                 posePar[currIdx] = ToPose3d(graph_->nodes[currIdx].T); // copy directly from graph
+                firstSubmap = false;
             }
             else if(scanItr == submapItr->begin()){  // if first in the submap but not in first node,
+              cout << "first scan - not first submap" << endl;
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(idxScanLast,currIdx)]; // we use odometry prediciton stored in the constraints...
+                cout << "inc: " << inc.translation().transpose() << endl;
+                cout << "last submap pos: " << inc.translation().transpose() << endl;
                 posePar[currIdx] = ToPose3d(graph_->nodes[idxScanLast].T*inc); //... to predict the current pose
             }
             else{ //use the posePar vector as well as graph constraints
+                cout << "Anywhere" << endl;
                 const int prevIdx = std::prev(scanItr)->first;
                 const Eigen::Isometry3d prev = ToIsometry3d(posePar[prevIdx]);
                 const Eigen::Isometry3d inc = graph_->constraints[std::make_pair(prevIdx,currIdx)];
@@ -485,16 +499,24 @@ void Fuser::RunSubmapFuser(){
         NormalCloud::Ptr aggregatedTransformed = NormalCloud().makeShared();
         idxScanLast = std::prev(submapItr->end())->first;
         poseScanLast =  ToIsometry3d(posePar[idxScanLast]);
-
+        cout << "last pos: " << poseScanLast.translation().transpose() << endl;
         bool fuseKeyframeToHistory = false;
-        if(firstSubmap ||  (keyframesHistory.back().pose.inverse()*poseScanLast).translation().norm() > par_.minDistanceKeyframe ){
-            cout << "Sufficient movement - scan fused, movement:  " <<(keyframesHistory.back().pose.inverse()*poseScanLast).translation().norm() << endl;
-            fuseKeyframeToHistory = true;
+        if(keyframesHistory.empty()){
+          fuseKeyframeToHistory = true;
         }
         else{
-            cout << "Sensor stationary - do not fuse " << endl;
+            const double distance = (keyframesHistory.back().pose.inverse()*poseScanLast).translation().norm();
+            if(distance > par_.minDistanceKeyframe ){
+              cout << "Sufficient movement - scan fused, movement:  " << distance << endl;
+              fuseKeyframeToHistory = true;
+            }
+            else{
+              cout << "Do not fuse" << endl;
+            }
+            //cout << "Sufficient movement - scan fused, movement:  " <<(keyframesHistory.back().pose.inverse()*poseScanLast).translation().norm() << endl;
+
         }
-        firstSubmap = false;
+
 
         for(auto && [idx,lock] : (*submapItr)){ // apply non-rigid transformation and concatinate scans into local frame, do only for scans, not previous keyframes
             NonRigidTransform(velPar[idx], {0,0,0}, NScanRefinement::Pose3d::Identity(), surf_[idx], surf_[idx]); // replace surf with deskewing - has no effect if velocity is not considered

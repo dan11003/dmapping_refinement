@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Wed_2023.05.10_16:45:23/graph.pg" />
+    <param name="constraint_graph_path" value="/home/daniel/Downloads/export//FLOAM_Thu_2023.05.11_09:59:34/graph.pg" />
     <!--arg name="slam_param_file" default="$(find lio_sam)/config/params_structor_outdoor.yaml" /-->
     <param name="keyframe_min_transl" type="double" value="0.5" /> <!-- 0.05 -->
     <param name="keyframe_min_rot" type="double" value="5" /> <!-- 0.035 -->
@@ -16,7 +16,7 @@
     <param name="estimate_rot_vel" type="bool" value="false" />
     <param name="estimate_position" type="bool" value="true" />
     <param name="estimate_orientation" type="bool" value="true" />
-    <param name="skip_frames" type="int" value="700" />
+    <param name="skip_frames" type="int" value="650" />
 
 
     <param name="directory_output" type="string" value="/home/daniel/Documents/cloud/" />

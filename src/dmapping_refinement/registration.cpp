@@ -44,8 +44,9 @@ NScanRefinement::NScanRefinement(Parameters& par, const std::map<int,Pose3d>& po
             }
             filestream.close();
         }*/
-        if(par_.debug)
+        /*if(par_.debug)
             cout <<"Downsampling rate: " << (double)filtered_[idx]->size() / surf_[idx]->size()  << endl;
+        */
     }
 }
 
@@ -180,7 +181,7 @@ void NonRigidTransform(const NScanRefinement::Pose3d& vel, const Eigen::Vector3d
         /*if(i == input->size()/2 || i == 0 || i== input->size() -1)
             cout <<"rot mat: " <<rotCompMat << endl;;*/
 
-        const Eigen::Vector3d p_transformed = q*(rotCompMat*p+v_comp) + t; // rigid transform
+        const Eigen::Vector3d p_transformed = q*(rotCompMat*(p+v_comp)) + t; // rigid transform
         const Eigen::Vector3d normal(pnt.normal_x, pnt.normal_y, pnt.normal_z);
         const Eigen::Vector3d normal_transformed = q*(rotCompMat*normal);
         tmp->push_back(EigToPnt(p_transformed, normal_transformed, input->points[i].intensity, input->points[i].curvature));
@@ -216,6 +217,8 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
     const Eigen::Vector3d src_pnt = PntToEig(filtered_[c.src_scan]->points[c.src_idx]);     // // verify src and  target
     const Eigen::Vector3d dst_pnt = PntToEig(filtered_[c.target_scan]->points[c.target_idx]);
     const Eigen::Vector3d dst_normal = NormalToEig(filtered_[c.target_scan]->points[c.target_idx]);
+    const double t_src = filtered_[c.src_scan]->points[c.src_idx].curvature;
+    const double t_target = filtered_[c.target_scan]->points[c.target_idx].curvature; // OOOOOOPS - KAN DETTA VARA ETT STORT FEL??!?!? FEL TIDPUNKT ANVÄNDS????
 
     /*const Eigen::Quaterniond q_src(poses_[c.src_scan].q.coeffs().data());
     const Eigen::Quaterniond q_dst(poses_[c.target_scan].q.coeffs().data());
@@ -232,8 +235,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
     }
 
     //cout <<"src: " << src_pnt.transpose() << ", dst_pnt: " << dst_pnt.transpose() <<", dst_pnt: " << dst_normal.transpose() << endl;
-    const double t_src = surf_[c.src_scan]->points[c.src_idx].curvature;
-    const double t_target = surf_[c.target_scan]->points[c.target_idx].curvature;
+
 
     ceres::CostFunction* cost_function = PointToPlaneErrorGlobalTime::Create(dst_pnt, src_pnt, dst_normal, t_src, t_target); //´
     ceres::LossFunction* loss = nullptr;
@@ -251,6 +253,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
         //cout << src_pnt.transpose() << ", " << dst_pnt.transpose() << ", " << dst_normal.transpose() << endl;
         //cout <<"block: "<< poses_[c.src_scan].q.coeffs().data()<<", " << poses_[c.src_scan].p.data() << ", " <<poses_[c.target_scan].q.coeffs().data() <<", " << poses_[c.target_scan].p.data() << endl;
     }
+
     /*prob.AddResidualBlock(cost_function,
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
@@ -258,7 +261,8 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
             poses_[c.target_scan].q.coeffs().data(),
             poses_[c.target_scan].p.data(),
             velocities_[c.src_scan].p.data(),
-            velocities_[c.target_scan].p.data());*/
+            velocities_[c.target_scan].p.data()
+            );*/
     prob.AddResidualBlock(cost_function,
                           scaled_loss,
                           poses_[c.src_scan].q.coeffs().data(),
@@ -268,8 +272,7 @@ void NScanRefinement::addSurfCostFactor(const Correspondance& c, ceres::Problem&
             velocities_[c.src_scan].p.data(),
             velocities_[c.target_scan].p.data(),
             angularvelocity_[c.src_scan].data(),
-            angularvelocity_[c.target_scan].data()
-            );
+            angularvelocity_[c.target_scan].data());
 
 
 }
@@ -346,7 +349,8 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
 
     for (int i = 0; i < par_.outer_iterations ; i++) {
         ceres::Problem problem;
-        cout << "\tCompute correspondance" << endl;
+        cout << "itr: " << i + 1 << endl;
+        //cout << "\tCompute correspondance" << endl;
         TransformCommonFrame(filtered_, transformed_, true);
         std::vector<std::pair<int,int> > scan_pairs = AssociateScanPairsLogN(); //  {std::make_pair(poses_.begin()->first,std::next(poses_.begin())->first )};
         //cout <<"scan pairs: " << scan_pairs.size() << endl;
@@ -419,14 +423,15 @@ void NScanRefinement::Solve(std::map<int,Pose3d>& solutionPose, std::map<int,Pos
                 }
 
             }
-            cout << "\tMinimize" << endl;
+            //cout << "\tMinimize" << endl;
             ceres::Solve(options, &problem, &summary);
-            cout << "\tsolved" << endl;
+            //cout << "\tsolved" << endl;
             if(!summary.IsSolutionUsable()){
                 cout << "ERROR NOT USABLE" << endl;
                 exit(0);
             }
-            cout << "\tscore: " << summary.final_cost / summary.num_residuals << endl;
+            //cout << "\tscore: " << summary.final_cost / summary.num_residuals << endl;
+            cout << "itr: " << i + 1 <<", score: " << summary.final_cost / summary.num_residuals  << endl;
             //cout << "legit? - " << summary.IsSolutionUsable() << endl;
         }
         if(par_.debug){

@@ -95,6 +95,6 @@ add_dependencies(refinement_node ${catkin_EXPORTED_TARGETS})
 #target_link_libraries(testopti ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
 #add_dependencies(testopti ${catkin_EXPORTED_TARGETS})
 
-#add_executable(calib src/calib.cpp)
-#target_link_libraries(calib ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} )
-#add_dependencies(calib ${catkin_EXPORTED_TARGETS})
+add_executable(calib src/calib.cpp)
+target_link_libraries(calib ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} )
+add_dependencies(calib ${catkin_EXPORTED_TARGETS})

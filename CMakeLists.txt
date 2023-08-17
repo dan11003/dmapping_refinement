@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 #add dynamic reconfigure api
 #find_package(catkin REQUIRED dynamic_reconfigure)
 find_package(catkin REQUIRED )
+find_package(GTSAM REQUIRED QUIET)
 
 generate_dynamic_reconfigure_options(
         cfg/calibParams.cfg
@@ -67,12 +68,13 @@ link_directories(
   include
   ${PCL_LIBRARY_DIRS}
   ${CERES_LIBRARY_DIRS}
+    ${GTSAM_LIBRARY_DIRS}
 )
 
 
 catkin_package(
   CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs lio_sam floam
-  DEPENDS EIGEN3 PCL Ceres
+  DEPENDS EIGEN3 PCL Ceres GTSAM
   INCLUDE_DIRS include
 )
 
@@ -83,12 +85,12 @@ set (${PROJECT_NAME}_LIB_SRCS
   src/dmapping_refinement/registration.cpp
 )
 add_library(${PROJECT_NAME} ${${PROJECT_NAME}_LIB_SRCS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} gtsam)
 
 
 
 add_executable(refinement_node src/refinement_node.cpp)
-target_link_libraries(refinement_node ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
+target_link_libraries(refinement_node ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam ) #${PROJECT_NAME}_ODOMEST_LIB ${PROJECT_NAME}
 add_dependencies(refinement_node ${catkin_EXPORTED_TARGETS})
 
 #add_executable(testopti src/test_opti.cpp)
@@ -96,5 +98,5 @@ add_dependencies(refinement_node ${catkin_EXPORTED_TARGETS})
 #add_dependencies(testopti ${catkin_EXPORTED_TARGETS})
 
 add_executable(calib src/calib.cpp)
-target_link_libraries(calib ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} )
+target_link_libraries(calib ${PROJECT_NAME} ${EIGEN3_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} gtsam)
 add_dependencies(calib ${catkin_EXPORTED_TARGETS})
